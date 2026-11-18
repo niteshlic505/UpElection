@@ -1222,9 +1222,9 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-    <div className="min-h-screen flex flex-col bg-[#FAF6EE] dark:bg-[#060D1F] up-desi-jaali text-slate-900 dark:text-slate-100 pb-20 md:pb-8">
+    <div className="min-h-screen flex flex-col bg-[#FAF6EE] dark:bg-[#050B1A] up-desi-jaali text-slate-900 dark:text-slate-100 pb-20 md:pb-8">
       {/* Top Corporate Navy Material 3 App Bar with Saffron-White-Green Tiranga Accent */}
-      <header className="sticky top-0 z-40 bg-gradient-to-r from-[#07112B]/95 via-[#0D1E4A]/95 to-[#0A1633]/95 backdrop-blur-md text-white shadow-[0_6px_28px_-8px_rgba(37,99,235,0.5)]">
+      <header className="sticky top-0 z-40 bg-gradient-to-r from-[#060E24]/95 via-[#0C1B44]/95 to-[#081330]/95 backdrop-blur-md text-white border-b border-cyan-400/15 shadow-[0_8px_30px_-10px_rgba(37,99,235,0.52)]">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2 sm:gap-6">
           {/* Zone 1: Brand / Back */}
           <div className="flex items-center gap-2 min-w-0 shrink-0">
@@ -1280,13 +1280,20 @@ export default function App() {
                   key={item.id}
                   type="button"
                   onClick={() => navigateTo(item.id as AppTab)}
-                  className={`py-1 transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b-2 ${
+                  className={`relative py-2 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                     isActive
-                      ? 'text-white font-bold border-[#F59E0B]'
-                      : 'border-transparent hover:text-white'
+                      ? 'text-white font-bold'
+                      : 'hover:text-white'
                   }`}
                 >
                   {item.label}
+                  {isActive && (
+                    <motion.span
+                      layoutId="activeDesktopNav"
+                      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                      className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-cyan-300 shadow-[0_0_10px_rgba(245,158,11,0.85)]"
+                    />
+                  )}
                 </button>
               );
             })}
@@ -1294,14 +1301,21 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => navigateTo('admin')}
-                className={`py-1 transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b-2 inline-flex items-center gap-1.5 ${
+                className={`relative py-2 transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-1.5 ${
                   activeTab === 'admin'
-                    ? 'text-[#F59E0B] font-bold border-[#F59E0B]'
-                    : 'border-transparent text-amber-200/90 hover:text-[#F59E0B]'
+                    ? 'text-[#F59E0B] font-bold'
+                    : 'text-amber-200/90 hover:text-[#F59E0B]'
                 }`}
               >
                 <Shield className="w-3.5 h-3.5" />
                 {t.nav.admin}
+                {activeTab === 'admin' && (
+                  <motion.span
+                    layoutId="activeDesktopNav"
+                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#FF9933] to-[#F59E0B] shadow-[0_0_10px_rgba(245,158,11,0.85)]"
+                  />
+                )}
               </button>
             )}
           </nav>
@@ -1493,7 +1507,7 @@ export default function App() {
       {/* Mobile Fixed Material 3 Bottom Navigation Bar */}
       <nav
         aria-label="Primary Mobile Navigation"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#0B1630]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-blue-500/20 pb-safe up-md3-elev-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#09142C]/95 backdrop-blur-md border-t border-amber-500/20 dark:border-cyan-400/20 pb-safe up-md3-elev-2"
       >
         <div className={`grid h-16 items-center ${canAccessAdmin ? 'grid-cols-6' : 'grid-cols-5'}`}>
           {[
@@ -1512,18 +1526,19 @@ export default function App() {
                 onClick={() => navigateTo(id as AppTab)}
                 className={`flex flex-col items-center justify-center gap-1 h-full transition-colors cursor-pointer up-md3-ripple px-0.5 ${
                   active
-                    ? 'text-[#1D4ED8] dark:text-[#60A5FA]'
+                    ? 'text-[#1D4ED8] dark:text-cyan-300'
                     : 'text-slate-500 dark:text-slate-400'
                 }`}
               >
-                <span
-                  className={`w-12 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
-                    active
-                      ? 'bg-blue-100 dark:bg-blue-500/25 shadow-[0_0_14px_-4px_rgba(37,99,235,0.55)]'
-                      : 'bg-transparent'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${active ? 'stroke-[2.4]' : 'stroke-[1.9]'}`} />
+                <span className="relative w-12 h-7 rounded-full flex items-center justify-center">
+                  {active && (
+                    <motion.span
+                      layoutId="activeMobileNavPill"
+                      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-100 via-blue-100 to-cyan-100 dark:from-amber-500/25 dark:via-blue-500/30 dark:to-cyan-500/25 shadow-[0_0_16px_-3px_rgba(34,211,238,0.65)] ring-1 ring-amber-400/40 dark:ring-cyan-400/40"
+                    />
+                  )}
+                  <Icon className={`relative z-10 w-4 h-4 ${active ? 'stroke-[2.4]' : 'stroke-[1.9]'}`} />
                 </span>
                 <span className="text-[10px] sm:text-[11px] font-semibold tracking-tight truncate max-w-full">
                   {label}

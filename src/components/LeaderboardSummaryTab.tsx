@@ -181,7 +181,7 @@ export const LeaderboardSummaryTab: React.FC<LeaderboardSummaryTabProps> = ({
   return (
     <div className="space-y-5">
       {/* Segmented Switch: Leaderboard | My Summary */}
-      <div className="rounded-2xl bg-white dark:bg-[#0E1A36] border border-slate-200/80 dark:border-slate-800 p-1.5 up-md3-elev-1 max-w-md mx-auto">
+      <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/20 dark:border-cyan-400/20 p-1.5 up-md3-elev-1 max-w-md mx-auto">
         <div className="grid grid-cols-2 gap-1.5">
           <button
             type="button"
@@ -212,7 +212,7 @@ export const LeaderboardSummaryTab: React.FC<LeaderboardSummaryTabProps> = ({
       </div>
 
       {/* Free Tier ₹50 Lakh Winner Prizes Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-[#091534] via-[#12265B] to-[#0E3168] text-white p-4 sm:p-5 up-gold-rim up-neon-edge flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-3xl bg-gradient-to-r from-[#091534] via-[#12265B] to-[#0E3168] text-white p-4 sm:p-5 up-gold-rim up-neon-edge up-neon-shimmer flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FF9933] to-[#F59E0B] text-slate-950 flex items-center justify-center shrink-0 up-float-3d">
             <Gift className="w-5 h-5" />

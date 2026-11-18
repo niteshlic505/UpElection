@@ -685,7 +685,7 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
   return (
     <div className="space-y-4">
       {/* Header & Search Card */}
-      <div className="rounded-3xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 shadow-sm space-y-4">
+      <div className="rounded-3xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/20 dark:border-cyan-400/20 p-4 sm:p-5 up-md3-elev-1 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-white">
@@ -693,7 +693,7 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{t.subtitle}</p>
           </div>
-          <span className="px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold font-mono-num">
+          <span className="text-xs font-bold font-mono-num text-blue-700 dark:text-cyan-300">
             {t.predictedChip(predictedCount)}
           </span>
         </div>
@@ -779,9 +779,9 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
       {/* Desktop 2-Column Split: Left List, Right Live Detail Inspector */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Constituency List */}
-        <div className="lg:col-span-6 space-y-2.5">
+        <div className="lg:col-span-6 space-y-2.5 up-stage-3d">
           {pagedSeats.length === 0 ? (
-            <div className="rounded-2xl bg-white dark:bg-[#0F1B35] border border-slate-200 dark:border-slate-800 p-8 text-center">
+            <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 border border-slate-200 dark:border-slate-800 p-8 text-center up-md3-elev-1">
               <Users className="w-8 h-8 text-slate-400 mx-auto mb-2" />
               <div className="font-display font-bold text-sm text-slate-800 dark:text-white">
                 {t.noMatches}
@@ -800,12 +800,12 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
                     setActiveAcNo(seat.acNo);
                     setMobileModalOpen(true);
                   }}
-                  className={`w-full rounded-2xl p-3.5 text-left transition-all flex items-center justify-between gap-3 border up-md3-ripple up-card-3d cursor-pointer ${
+                  className={`w-full rounded-2xl p-3.5 min-h-[60px] text-left transition-all flex items-center justify-between gap-3 border up-md3-ripple up-card-3d cursor-pointer ${
                     isSelectedRow
-                      ? 'bg-white dark:bg-[#0F1B35] border-[#1D4ED8] up-neon-cyan'
+                      ? 'bg-white dark:bg-[#0C1732] border-[#FF9933] dark:border-cyan-400 up-neon-cyan'
                       : userPick
-                      ? 'bg-white dark:bg-[#0F1B35] border-emerald-300 dark:border-emerald-800/80 hover:border-emerald-400 up-md3-elev-1'
-                      : 'bg-white dark:bg-[#0F1B35] border-slate-200/80 dark:border-slate-800 hover:border-blue-300 up-md3-elev-1'
+                      ? 'bg-white/95 dark:bg-[#0C1732]/95 border-emerald-300 dark:border-emerald-700/70 hover:border-emerald-400 up-md3-elev-1'
+                      : 'bg-white/95 dark:bg-[#0C1732]/95 border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-cyan-400/50 up-md3-elev-1'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -844,12 +844,12 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="rounded-2xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-3 flex items-center justify-between text-xs">
+            <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 border border-slate-200/80 dark:border-slate-800 p-3 flex items-center justify-between text-xs up-md3-elev-1">
               <button
                 type="button"
                 disabled={safePage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 font-semibold disabled:opacity-40 cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-2 min-h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 font-semibold disabled:opacity-40 cursor-pointer up-md3-ripple"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Prev
@@ -863,7 +863,7 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
                 type="button"
                 disabled={safePage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 font-semibold disabled:opacity-40 cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-2 min-h-[40px] rounded-xl border border-slate-200 dark:border-slate-700 font-semibold disabled:opacity-40 cursor-pointer up-md3-ripple"
               >
                 Next
                 <ChevronRight className="w-4 h-4" />
@@ -875,7 +875,7 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
         {/* Right Sticky Detail Inspector (Desktop lg+) */}
         <div
           ref={desktopPanelRef}
-          className="hidden lg:block lg:col-span-6 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto rounded-3xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-6 up-md3-elev-2"
+          className="hidden lg:block lg:col-span-6 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto rounded-3xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/20 dark:border-cyan-400/20 p-6 up-md3-elev-2 up-neon-edge"
         >
           {renderDetailPanel(false)}
         </div>
@@ -890,12 +890,12 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
             aria-modal="true"
             aria-label={selectedSeat ? `AC ${selectedSeat.acNo} ${selectedSeat.name}` : 'Constituency prediction'}
             onClick={() => setMobileModalOpen(false)}
-            className="lg:hidden fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-xs flex items-start justify-center pt-4 sm:pt-8 px-3 sm:px-4 pb-4 overflow-y-auto"
+            className="lg:hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-start justify-center pt-4 sm:pt-8 px-3 sm:px-4 pb-4 overflow-y-auto"
           >
             <div
               ref={mobileModalPanelRef}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl bg-white dark:bg-[#0F1B35] border border-blue-200/70 dark:border-blue-500/30 p-5 pb-6 shadow-2xl up-md3-elev-2"
+              className="w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl bg-white dark:bg-[#0C1732] border border-amber-500/25 dark:border-cyan-400/30 p-5 pb-6 shadow-2xl up-md3-elev-3 up-neon-edge"
             >
               {renderDetailPanel(true)}
             </div>

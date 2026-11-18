@@ -183,7 +183,7 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
   return (
     <div className="space-y-5">
       {/* Year Toggle Bar (2007 | 2012 | 2017 | 2022 | 2027 Predict) */}
-      <div className="rounded-2xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-2 up-md3-elev-1">
+      <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/20 dark:border-cyan-400/20 p-2 up-md3-elev-1">
         <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
           {YEARS.map((yr) => {
             const active = selectedYear === yr;
@@ -218,7 +218,7 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
       {/* Main Layout: Chart Card + Alliance Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left: Doughnut Chart & Alliance Breakdown */}
-        <div className="lg:col-span-5 rounded-3xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-4 sm:p-6 up-md3-elev-1">
+        <div className="lg:col-span-5 rounded-3xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/20 dark:border-cyan-400/20 p-4 sm:p-6 up-md3-elev-1">
           <div className="flex flex-wrap items-start justify-between gap-2 sm:gap-3 mb-5">
             <div>
               <h2 className="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight">
@@ -318,7 +318,7 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
         {/* Right: Interactive Alliance Selector + 5-Seat Band Controls */}
         <div className="lg:col-span-7 space-y-4">
           {isHistorical ? (
-            <div className="rounded-3xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 up-md3-elev-1 space-y-4">
+            <div className="rounded-3xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/20 dark:border-cyan-400/20 p-5 sm:p-6 up-md3-elev-1 space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <History className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -379,6 +379,7 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                               src={meta.leaderPhotoUrl}
                               alt={meta.leaderEn}
                               title={`${meta.shortEn} · ${meta.leaderEn}`}
+                              referrerPolicy="no-referrer"
                               className="w-8 h-8 rounded-full object-cover object-top ring-2 ring-white dark:ring-slate-900"
                             />
                           );
@@ -401,7 +402,7 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
               </div>
             </div>
           ) : (
-            <div className="rounded-3xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 up-md3-elev-1 space-y-5">
+            <div className="rounded-3xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/20 dark:border-cyan-400/20 p-5 sm:p-6 up-md3-elev-1 space-y-5">
               {isLocked && (
                 <div className="rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 p-3 flex items-center gap-2.5 text-xs text-rose-700 dark:text-rose-300 font-medium">
                   <Lock className="w-4 h-4 shrink-0" />
@@ -533,6 +534,7 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                                   src={meta.leaderPhotoUrl}
                                   alt={meta.leaderEn}
                                   title={`${meta.shortEn} · ${language === 'hi' ? meta.leaderHi : meta.leaderEn}`}
+                                  referrerPolicy="no-referrer"
                                   className="w-9 h-9 rounded-full object-cover object-top ring-2 ring-white dark:ring-slate-900"
                                 />
                               );
@@ -626,7 +628,10 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                     initial={{ opacity: 0.75, scale: 0.96, rotateX: -8 }}
                     animate={{ opacity: 1, scale: 1, rotateX: 0 }}
                     transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex-1 rounded-2xl bg-white dark:bg-[#0F1B35] border border-slate-200 dark:border-slate-700 py-3 px-4 text-center up-md3-elev-1"
+                    style={{
+                      boxShadow: `0 0 0 1px ${selectedAlliance.color}66, 0 0 22px -6px ${selectedAlliance.color}70`,
+                    }}
+                    className="flex-1 rounded-2xl bg-white dark:bg-[#0C1732] border border-slate-200 dark:border-slate-700 py-3 px-4 text-center up-md3-elev-1"
                   >
                     <div className="font-display font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white font-mono-num">
                       {currentBand.label}

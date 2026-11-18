@@ -4,14 +4,14 @@
 @layer base {
   :root {
     --font-display: 'Outfit', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
-    --font-body: 'DM Sans', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+    --font-body: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-    /* Material Design 3 Light Tonal Palette — UP Sandstone Ivory & Sangam Blue */
+    /* Material Design 3 Light Tonal Palette — UP Sandstone Ivory, Tiranga Saffron & Sangam Navy */
     --md-sys-surface: #faf6ee;
     --md-sys-surface-container-low: #ffffff;
-    --md-sys-surface-container: #f3ece0;
-    --md-sys-surface-container-high: #e9dfd0;
+    --md-sys-surface-container: #f4ede1;
+    --md-sys-surface-container-high: #ebe1d0;
     --md-sys-primary: #1d4ed8;
     --md-sys-saffron: #ff9933;
     --md-sys-gold: #f59e0b;
@@ -23,11 +23,11 @@
   }
 
   .dark {
-    /* Material Design 3 Dark Tonal Palette — Awadh Midnight Indigo */
-    --md-sys-surface: #060d1f;
-    --md-sys-surface-container-low: #0e1a36;
-    --md-sys-surface-container: #132245;
-    --md-sys-surface-container-high: #1a2e5a;
+    /* Material Design 3 Dark Tonal Palette — Awadh Midnight Indigo & Ganga Neon */
+    --md-sys-surface: #050b1a;
+    --md-sys-surface-container-low: #0c1732;
+    --md-sys-surface-container: #122147;
+    --md-sys-surface-container-high: #192d5c;
     --md-sys-primary: #60a5fa;
     --md-sys-secondary-container: rgba(37, 99, 235, 0.24);
     --md-sys-on-secondary-container: #bfdbfe;
@@ -42,10 +42,12 @@
     font-family: var(--font-body);
     background-color: var(--md-sys-surface);
     -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
+    letter-spacing: -0.015em;
   }
 
   .font-mono-num {
@@ -58,37 +60,43 @@
 .up-md3-elev-1 {
   box-shadow:
     0 1px 2px rgba(10, 22, 51, 0.06),
-    0 2px 6px 1px rgba(10, 22, 51, 0.04);
+    0 3px 8px 1px rgba(10, 22, 51, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .dark .up-md3-elev-1 {
   box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(56, 189, 248, 0.14);
+    0 4px 12px rgba(0, 0, 0, 0.52),
+    0 0 0 1px rgba(56, 189, 248, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .up-md3-elev-2 {
   box-shadow:
-    0 4px 10px 2px rgba(10, 22, 51, 0.08),
-    0 1px 3px rgba(10, 22, 51, 0.06);
+    0 6px 16px 2px rgba(10, 22, 51, 0.09),
+    0 2px 5px rgba(10, 22, 51, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .dark .up-md3-elev-2 {
   box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(96, 165, 250, 0.22);
+    0 10px 26px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(96, 165, 250, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .up-md3-elev-3 {
   box-shadow:
-    0 10px 24px -4px rgba(10, 22, 51, 0.14),
-    0 4px 10px -2px rgba(10, 22, 51, 0.08);
+    0 14px 32px -4px rgba(10, 22, 51, 0.16),
+    0 6px 14px -2px rgba(10, 22, 51, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .dark .up-md3-elev-3 {
   box-shadow:
-    0 14px 30px -4px rgba(0, 0, 0, 0.65),
-    0 0 0 1px rgba(56, 189, 248, 0.26);
+    0 18px 38px -4px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(56, 189, 248, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Material Design 3 Tactile State Layer & Ink Ripple */
@@ -105,7 +113,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.28) 10%, transparent 65%);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 10%, transparent 65%);
   opacity: 0;
   transform: scale(0.35);
   transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 280ms ease;
@@ -124,7 +132,7 @@
 
 /* 3D Perspective Stage, Tilting Cards & Floating Depth */
 .up-stage-3d {
-  perspective: 1200px;
+  perspective: 1300px;
 }
 
 .up-card-3d {
@@ -139,7 +147,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .up-card-3d:hover {
-    transform: perspective(1100px) translateY(-4px) rotateX(2.5deg) translateZ(6px);
+    transform: perspective(1100px) translateY(-5px) rotateX(2.8deg) translateZ(8px);
   }
 }
 
@@ -149,41 +157,72 @@
 
 @keyframes upFloat3d {
   0%, 100% {
-    transform: translate3d(0, 0px, 14px) rotateY(-4deg);
+    transform: translate3d(0, 0px, 14px) rotateY(-5deg);
   }
   50% {
-    transform: translate3d(0, -5px, 22px) rotateY(4deg);
+    transform: translate3d(0, -6px, 24px) rotateY(5deg);
   }
 }
 
 .up-float-3d {
-  animation: upFloat3d 5.5s ease-in-out infinite;
+  animation: upFloat3d 5.2s ease-in-out infinite;
   transform-style: preserve-3d;
+}
+
+@keyframes upNeonSweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(240%) skewX(-18deg);
+  }
+}
+
+.up-neon-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.up-neon-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 153, 51, 0.11),
+    rgba(34, 211, 238, 0.16),
+    transparent
+  );
+  transform: translateX(-120%) skewX(-18deg);
+  animation: upNeonSweep 6.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 @keyframes upNeonPulse {
   0%, 100% {
     box-shadow:
-      0 0 0 1px rgba(56, 189, 248, 0.38),
-      0 0 22px -6px rgba(34, 211, 238, 0.42),
-      0 0 32px -12px rgba(245, 158, 11, 0.38),
-      0 14px 32px -10px rgba(10, 22, 51, 0.45);
+      0 0 0 1px rgba(56, 189, 248, 0.42),
+      0 0 26px -5px rgba(34, 211, 238, 0.48),
+      0 0 38px -12px rgba(245, 158, 11, 0.42),
+      0 16px 36px -10px rgba(10, 22, 51, 0.5);
   }
   50% {
     box-shadow:
-      0 0 0 1px rgba(245, 158, 11, 0.56),
-      0 0 28px -5px rgba(245, 158, 11, 0.45),
-      0 0 38px -10px rgba(34, 211, 238, 0.42),
-      0 16px 36px -10px rgba(10, 22, 51, 0.55);
+      0 0 0 1px rgba(245, 158, 11, 0.62),
+      0 0 32px -4px rgba(255, 153, 51, 0.52),
+      0 0 42px -10px rgba(34, 211, 238, 0.48),
+      0 18px 40px -10px rgba(10, 22, 51, 0.6);
   }
 }
 
 /* Precision Neon Lighting Accents */
 .up-neon-rim {
   box-shadow:
-    0 0 0 1px rgba(56, 189, 248, 0.36),
-    0 0 24px -6px rgba(6, 182, 212, 0.44),
-    0 14px 32px -10px rgba(10, 22, 51, 0.46);
+    0 0 0 1px rgba(56, 189, 248, 0.4),
+    0 0 26px -5px rgba(6, 182, 212, 0.48),
+    0 14px 34px -10px rgba(10, 22, 51, 0.48);
 }
 
 .up-neon-pulse {
@@ -192,16 +231,23 @@
 
 .up-neon-cyan {
   box-shadow:
-    0 0 0 1px rgba(34, 211, 238, 0.42),
-    0 0 20px -4px rgba(6, 182, 212, 0.42),
-    0 10px 24px -8px rgba(15, 23, 42, 0.28);
+    0 0 0 1px rgba(34, 211, 238, 0.46),
+    0 0 22px -4px rgba(6, 182, 212, 0.48),
+    0 10px 26px -8px rgba(15, 23, 42, 0.3);
 }
 
 .up-gold-rim {
   box-shadow:
-    0 0 0 1px rgba(245, 158, 11, 0.54),
-    0 0 26px -5px rgba(255, 153, 51, 0.44),
-    0 12px 30px -10px rgba(120, 53, 15, 0.32);
+    0 0 0 1px rgba(245, 158, 11, 0.58),
+    0 0 28px -4px rgba(255, 153, 51, 0.48),
+    0 12px 32px -10px rgba(120, 53, 15, 0.34);
+}
+
+.up-neon-emerald {
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.44),
+    0 0 22px -5px rgba(19, 136, 8, 0.38),
+    0 10px 26px -8px rgba(6, 78, 59, 0.25);
 }
 
 .up-neon-edge {
@@ -213,12 +259,12 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1.25px;
+  padding: 1.35px;
   background: linear-gradient(
     135deg,
-    rgba(255, 153, 51, 0.72),
-    rgba(34, 211, 238, 0.55) 50%,
-    rgba(19, 136, 8, 0.65)
+    rgba(255, 153, 51, 0.78),
+    rgba(34, 211, 238, 0.62) 50%,
+    rgba(19, 136, 8, 0.72)
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -227,39 +273,45 @@
 }
 
 .up-neon-text-gold {
-  text-shadow: 0 0 18px rgba(245, 158, 11, 0.45);
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.52);
 }
 
 .up-neon-text-cyan {
-  text-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+  text-shadow: 0 0 18px rgba(34, 211, 238, 0.46);
 }
 
-/* Uttar Pradesh Cultural Motifs: Tiranga Ribbon, Lucknowi Jaali & Rumi Arch Grid */
+/* Uttar Pradesh Cultural Motifs: Tiranga Ribbon & Lucknowi Chikankari Jali Lattice */
 .up-tiranga-bar {
-  height: 3px;
+  height: 3.5px;
   background: linear-gradient(
     90deg,
     #ff9933 0%,
-    #ff9933 33%,
-    #ffffff 33%,
+    #ff9933 32%,
+    #ffffff 34%,
+    #38bdf8 50%,
     #ffffff 66%,
-    #138808 66%,
+    #138808 68%,
     #138808 100%
   );
+  box-shadow: 0 1px 10px rgba(255, 153, 51, 0.32);
 }
 
 .up-desi-jaali {
   background-image:
-    radial-gradient(circle at 24px 24px, rgba(245, 158, 11, 0.11) 1.4px, transparent 1.5px),
-    radial-gradient(circle at 0 0, rgba(29, 78, 216, 0.07) 1.2px, transparent 1.3px);
-  background-size: 48px 48px;
+    radial-gradient(circle at 24px 24px, rgba(245, 158, 11, 0.13) 1.5px, transparent 1.6px),
+    radial-gradient(circle at 0 0, rgba(29, 78, 216, 0.08) 1.3px, transparent 1.4px),
+    linear-gradient(135deg, rgba(255, 153, 51, 0.025) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(19, 136, 8, 0.02) 25%, transparent 25%);
+  background-size: 48px 48px, 48px 48px, 48px 48px, 48px 48px;
 }
 
 .dark .up-desi-jaali {
   background-image:
-    radial-gradient(circle at 24px 24px, rgba(245, 158, 11, 0.09) 1.4px, transparent 1.5px),
-    radial-gradient(circle at 0 0, rgba(34, 211, 238, 0.09) 1.2px, transparent 1.3px);
-  background-size: 48px 48px;
+    radial-gradient(circle at 24px 24px, rgba(245, 158, 11, 0.11) 1.5px, transparent 1.6px),
+    radial-gradient(circle at 0 0, rgba(34, 211, 238, 0.1) 1.3px, transparent 1.4px),
+    linear-gradient(135deg, rgba(34, 211, 238, 0.03) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(255, 153, 51, 0.025) 25%, transparent 25%);
+  background-size: 48px 48px, 48px 48px, 48px 48px, 48px 48px;
 }
 
 /* Custom sleek Material 3 slider */

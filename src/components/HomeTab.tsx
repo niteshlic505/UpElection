@@ -191,7 +191,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       {/* Top Desktop Grid: User Profile + 3 KPIs */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 up-stage-3d">
         {/* User Identity & Cloud Sync Card */}
-        <div className="lg:col-span-5 rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-cyan-400/20 p-4 sm:p-5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4 up-md3-elev-1 up-card-3d">
+        <div className="lg:col-span-5 rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/25 dark:border-cyan-400/20 p-4 sm:p-5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4 up-md3-elev-1 up-card-3d">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             {userProfile?.photoURL ? (
               <img
@@ -236,8 +236,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
         {/* 3 KPI Stat Cards */}
         <div className="lg:col-span-7 grid grid-cols-3 gap-2 sm:gap-4">
-          <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-slate-800 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
-            <div className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1.5 sm:mb-2">
+          <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/25 dark:border-amber-400/20 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
+            <div className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1.5 sm:mb-2">
               <Trophy className="w-4 h-4" />
             </div>
             <div className="font-display font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white font-mono-num">
@@ -248,8 +248,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-emerald-500/25 dark:border-slate-800 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
-            <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1.5 sm:mb-2">
+          <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-emerald-500/25 dark:border-emerald-400/20 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
+            <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1.5 sm:mb-2">
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <div className="font-display font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white font-mono-num">
@@ -260,8 +260,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-cyan-500/25 dark:border-slate-800 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
-            <div className="w-9 h-9 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-1.5 sm:mb-2">
+          <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-cyan-500/25 dark:border-cyan-400/20 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
+            <div className="w-9 h-9 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-1.5 sm:mb-2">
               <Clock className="w-4 h-4" />
             </div>
             <div className="font-display font-extrabold text-sm sm:text-2xl text-slate-900 dark:text-white font-mono-num whitespace-nowrap">
@@ -287,8 +287,35 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           }}
           onPointerLeave={() => setPrizeTilt({ rotateX: 0, rotateY: 0 })}
           style={{ transformStyle: 'preserve-3d' }}
-          className="rounded-3xl bg-gradient-to-r from-[#091534] via-[#12265B] to-[#0E3168] text-white p-5 sm:p-6 up-gold-rim up-neon-edge relative overflow-hidden"
+          className="rounded-3xl bg-gradient-to-r from-[#091534] via-[#12265B] to-[#0E3168] text-white p-5 sm:p-6 up-gold-rim up-neon-edge up-neon-shimmer relative overflow-hidden"
         >
+          {/* Subtle Ashoka Chakra & UP Architectural Linework Motif */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 120 120"
+            className="absolute -right-6 -top-6 w-40 h-40 text-amber-300/10 pointer-events-none select-none"
+            fill="none"
+          >
+            <circle cx="60" cy="60" r="46" stroke="currentColor" strokeWidth="1.5" />
+            <circle cx="60" cy="60" r="34" stroke="currentColor" strokeWidth="1" strokeDasharray="3 4" />
+            <circle cx="60" cy="60" r="8" stroke="currentColor" strokeWidth="1.5" />
+            {Array.from({ length: 12 }).map((_, idx) => {
+              const deg = idx * 30;
+              return (
+                <line
+                  key={deg}
+                  x1="60"
+                  y1="14"
+                  x2="60"
+                  y2="106"
+                  stroke="currentColor"
+                  strokeWidth="0.9"
+                  transform={`rotate(${deg} 60 60)`}
+                />
+              );
+            })}
+          </svg>
+
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
             <div className="flex items-start gap-4" style={{ transform: 'translateZ(14px)' }}>
               <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#FF9933] via-[#F59E0B] to-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-lg up-float-3d">
@@ -319,7 +346,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigate('leaderboard', 'leaderboard')}
-                className="px-4 py-3 rounded-xl bg-gradient-to-r from-[#FF9933] to-[#F59E0B] hover:from-amber-400 hover:to-amber-500 text-slate-950 font-display font-extrabold text-xs sm:text-sm up-md3-ripple cursor-pointer whitespace-nowrap"
+                className="px-4 py-3 min-h-[44px] rounded-xl bg-gradient-to-r from-[#FF9933] to-[#F59E0B] hover:from-amber-400 hover:to-amber-500 text-slate-950 font-display font-extrabold text-xs sm:text-sm up-md3-ripple cursor-pointer whitespace-nowrap"
               >
                 {t.rewards.ctaLeaderboard}
               </button>
@@ -352,8 +379,27 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-r from-[#060D1F]/95 via-[#091534]/82 to-[#091534]/45"
+            className="absolute inset-0 bg-gradient-to-r from-[#050B1A]/95 via-[#091534]/82 to-[#091534]/45"
           />
+          {/* Subtle Rumi Darwaza Arch Silhouette SVG Ornament */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 180 180"
+            className="hidden sm:block absolute right-3 bottom-0 w-40 h-40 text-amber-300/15 pointer-events-none select-none"
+            fill="none"
+          >
+            <path
+              d="M20 180 V95 C20 55 55 24 90 12 C125 24 160 55 160 95 V180"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            />
+            <path
+              d="M42 180 V106 C42 74 65 48 90 36 C115 48 138 74 138 106 V180"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeDasharray="4 4"
+            />
+          </svg>
           <div className="up-tiranga-bar absolute top-0 inset-x-0 opacity-95" aria-hidden="true" />
 
           <div className="relative z-10 space-y-3 pt-1" style={{ transform: 'translateZ(18px)' }}>
@@ -378,7 +424,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('parties')}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-[#FF9933] to-[#F59E0B] hover:from-amber-400 hover:to-amber-500 text-slate-950 font-display font-extrabold text-sm transition-colors up-gold-rim up-md3-ripple cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-2 px-5 py-3 min-h-[44px] rounded-xl bg-gradient-to-r from-[#FF9933] to-[#F59E0B] hover:from-amber-400 hover:to-amber-500 text-slate-950 font-display font-extrabold text-sm transition-colors up-gold-rim up-md3-ripple cursor-pointer whitespace-nowrap"
             >
               <span>{t.home.predictSeatsNow}</span>
               <ArrowRight className="w-4 h-4" />
@@ -386,7 +432,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('constituencies')}
-              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-sm border border-cyan-300/35 backdrop-blur-xs transition-colors up-md3-ripple cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-2 px-4 py-3 min-h-[44px] rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-sm border border-cyan-300/35 backdrop-blur-xs transition-colors up-md3-ripple cursor-pointer whitespace-nowrap"
             >
               <span>{t.home.browse403Seats}</span>
             </button>
@@ -394,7 +440,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
         </motion.div>
 
         {/* Current 2027 Seat Allocation Preview */}
-        <div className="lg:col-span-5 rounded-3xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-cyan-400/20 p-5 sm:p-6 up-md3-elev-1 flex flex-col justify-between">
+        <div className="lg:col-span-5 rounded-3xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/25 dark:border-cyan-400/20 p-5 sm:p-6 up-md3-elev-1 flex flex-col justify-between">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
               <h3 className="font-display font-bold text-base text-slate-900 dark:text-white">
@@ -480,7 +526,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('parties')}
-            className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-amber-500 dark:hover:border-amber-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
+            className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-amber-500 dark:hover:border-amber-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
           >
             <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <PieChart className="w-5 h-5" />
@@ -493,7 +539,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('alliances')}
-            className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-orange-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-orange-500 dark:hover:border-orange-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
+            className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-orange-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-orange-500 dark:hover:border-orange-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
           >
             <div className="w-11 h-11 rounded-xl bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center">
               <GitMerge className="w-5 h-5" />
@@ -506,7 +552,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('constituencies')}
-            className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-cyan-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-cyan-500 dark:hover:border-cyan-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
+            className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-cyan-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-cyan-500 dark:hover:border-cyan-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
           >
             <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-cyan-400 flex items-center justify-center">
               <MapPin className="w-5 h-5" />
@@ -519,7 +565,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('leaderboard', 'leaderboard')}
-            className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-amber-500 dark:hover:border-amber-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
+            className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-amber-500 dark:hover:border-amber-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
           >
             <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Trophy className="w-5 h-5" />
@@ -532,7 +578,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('leaderboard', 'summary')}
-            className="col-span-2 sm:col-span-1 rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-emerald-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-emerald-500 dark:hover:border-emerald-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
+            className="col-span-2 sm:col-span-1 rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-emerald-500/25 dark:border-slate-800 p-4 flex flex-col items-center gap-2.5 hover:border-emerald-500 dark:hover:border-emerald-400 transition-all up-md3-elev-1 up-md3-ripple up-card-3d cursor-pointer"
           >
             <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <FileText className="w-5 h-5" />
@@ -544,20 +590,46 @@ export const HomeTab: React.FC<HomeTabProps> = ({
         </div>
       </div>
 
-      {/* Independent Civic Compliance Footer Card */}
-      <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-slate-800 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-700 dark:text-slate-300">
-        <div className="flex items-start sm:items-center gap-2.5">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5 sm:mt-0" />
-          <span>{t.home.footerNotice}</span>
+      {/* Security & Civic Protection Bar + Independent Legal Compliance Card */}
+      <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-emerald-500/25 dark:border-cyan-400/20 p-4 space-y-2.5 up-md3-elev-1 up-neon-emerald">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <span>
+            {language === 'hi'
+              ? 'Firebase एन्क्रिप्टेड सुरक्षा'
+              : 'Firebase Encrypted Sync'}
+          </span>
+          <span aria-hidden="true" className="text-slate-400">·</span>
+          <span>
+            {language === 'hi'
+              ? '403 सत्यापित ECI विधानसभा क्षेत्र'
+              : '403 Verified ECI Constituencies'}
+          </span>
+          <span aria-hidden="true" className="text-slate-400">·</span>
+          <span>
+            {language === 'hi'
+              ? 'धारा 126 RP Act अनुपालन'
+              : 'Section 126 RP Act Compliant'}
+          </span>
+          <span aria-hidden="true" className="text-slate-400">·</span>
+          <span>
+            {language === 'hi'
+              ? '100% निःशुल्क भागीदारी'
+              : '100% Free Civic Participation'}
+          </span>
         </div>
-        <button
-          type="button"
-          onClick={onOpenLegal}
-          className="text-blue-600 dark:text-cyan-400 font-semibold hover:underline whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0"
-        >
-          <BarChart3 className="w-3.5 h-3.5" />
-          {t.home.legalScoringBtn}
-        </button>
+
+        <div className="pt-2.5 border-t border-slate-200/70 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+          <span>{t.home.footerNotice}</span>
+          <button
+            type="button"
+            onClick={onOpenLegal}
+            className="text-blue-600 dark:text-cyan-400 font-semibold hover:underline whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0"
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            {t.home.legalScoringBtn}
+          </button>
+        </div>
       </div>
     </div>
   );
