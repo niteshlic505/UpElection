@@ -1,0 +1,321 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-display: 'Outfit', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+    --font-body: 'DM Sans', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+    /* Material Design 3 Light Tonal Palette — UP Sandstone Ivory & Sangam Blue */
+    --md-sys-surface: #faf6ee;
+    --md-sys-surface-container-low: #ffffff;
+    --md-sys-surface-container: #f3ece0;
+    --md-sys-surface-container-high: #e9dfd0;
+    --md-sys-primary: #1d4ed8;
+    --md-sys-saffron: #ff9933;
+    --md-sys-gold: #f59e0b;
+    --md-sys-ganga: #06b6d4;
+    --md-sys-india-green: #138808;
+    --md-sys-secondary-container: #dbeafe;
+    --md-sys-on-secondary-container: #0f2766;
+    --md-sys-outline-variant: rgba(15, 23, 42, 0.1);
+  }
+
+  .dark {
+    /* Material Design 3 Dark Tonal Palette — Awadh Midnight Indigo */
+    --md-sys-surface: #060d1f;
+    --md-sys-surface-container-low: #0e1a36;
+    --md-sys-surface-container: #132245;
+    --md-sys-surface-container-high: #1a2e5a;
+    --md-sys-primary: #60a5fa;
+    --md-sys-secondary-container: rgba(37, 99, 235, 0.24);
+    --md-sys-on-secondary-container: #bfdbfe;
+    --md-sys-outline-variant: rgba(148, 163, 184, 0.16);
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--md-sys-surface);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono-num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Material Design 3 Elevation Tiers */
+.up-md3-elev-1 {
+  box-shadow:
+    0 1px 2px rgba(10, 22, 51, 0.06),
+    0 2px 6px 1px rgba(10, 22, 51, 0.04);
+}
+
+.dark .up-md3-elev-1 {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(56, 189, 248, 0.14);
+}
+
+.up-md3-elev-2 {
+  box-shadow:
+    0 4px 10px 2px rgba(10, 22, 51, 0.08),
+    0 1px 3px rgba(10, 22, 51, 0.06);
+}
+
+.dark .up-md3-elev-2 {
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(96, 165, 250, 0.22);
+}
+
+.up-md3-elev-3 {
+  box-shadow:
+    0 10px 24px -4px rgba(10, 22, 51, 0.14),
+    0 4px 10px -2px rgba(10, 22, 51, 0.08);
+}
+
+.dark .up-md3-elev-3 {
+  box-shadow:
+    0 14px 30px -4px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(56, 189, 248, 0.26);
+}
+
+/* Material Design 3 Tactile State Layer & Ink Ripple */
+.up-md3-ripple {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 160ms ease;
+}
+
+.up-md3-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.28) 10%, transparent 65%);
+  opacity: 0;
+  transform: scale(0.35);
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 280ms ease;
+  pointer-events: none;
+}
+
+.up-md3-ripple:active {
+  transform: scale(0.98);
+}
+
+.up-md3-ripple:active::after {
+  opacity: 1;
+  transform: scale(1.6);
+  transition: transform 0s, opacity 0s;
+}
+
+/* 3D Perspective Stage, Tilting Cards & Floating Depth */
+.up-stage-3d {
+  perspective: 1200px;
+}
+
+.up-card-3d {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 200ms ease;
+}
+
+.up-card-3d:hover {
+  transform: perspective(1100px) translateY(-4px) rotateX(2.5deg) translateZ(6px);
+}
+
+.up-card-3d:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+@keyframes upFloat3d {
+  0%, 100% {
+    transform: translate3d(0, 0px, 14px) rotateY(-4deg);
+  }
+  50% {
+    transform: translate3d(0, -5px, 22px) rotateY(4deg);
+  }
+}
+
+.up-float-3d {
+  animation: upFloat3d 5.5s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes upNeonPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(56, 189, 248, 0.38),
+      0 0 22px -6px rgba(34, 211, 238, 0.42),
+      0 0 32px -12px rgba(245, 158, 11, 0.38),
+      0 14px 32px -10px rgba(10, 22, 51, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(245, 158, 11, 0.56),
+      0 0 28px -5px rgba(245, 158, 11, 0.45),
+      0 0 38px -10px rgba(34, 211, 238, 0.42),
+      0 16px 36px -10px rgba(10, 22, 51, 0.55);
+  }
+}
+
+/* Precision Neon Lighting Accents */
+.up-neon-rim {
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.36),
+    0 0 24px -6px rgba(6, 182, 212, 0.44),
+    0 14px 32px -10px rgba(10, 22, 51, 0.46);
+}
+
+.up-neon-pulse {
+  animation: upNeonPulse 4.5s ease-in-out infinite;
+}
+
+.up-neon-cyan {
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.42),
+    0 0 20px -4px rgba(6, 182, 212, 0.42),
+    0 10px 24px -8px rgba(15, 23, 42, 0.28);
+}
+
+.up-gold-rim {
+  box-shadow:
+    0 0 0 1px rgba(245, 158, 11, 0.54),
+    0 0 26px -5px rgba(255, 153, 51, 0.44),
+    0 12px 30px -10px rgba(120, 53, 15, 0.32);
+}
+
+.up-neon-edge {
+  position: relative;
+}
+
+.up-neon-edge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.25px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 153, 51, 0.72),
+    rgba(34, 211, 238, 0.55) 50%,
+    rgba(19, 136, 8, 0.65)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.up-neon-text-gold {
+  text-shadow: 0 0 18px rgba(245, 158, 11, 0.45);
+}
+
+.up-neon-text-cyan {
+  text-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+}
+
+/* Uttar Pradesh Cultural Motifs: Tiranga Ribbon, Lucknowi Jaali & Rumi Arch Grid */
+.up-tiranga-bar {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    #ff9933 0%,
+    #ff9933 33%,
+    #ffffff 33%,
+    #ffffff 66%,
+    #138808 66%,
+    #138808 100%
+  );
+}
+
+.up-desi-jaali {
+  background-image:
+    radial-gradient(circle at 24px 24px, rgba(245, 158, 11, 0.11) 1.4px, transparent 1.5px),
+    radial-gradient(circle at 0 0, rgba(29, 78, 216, 0.07) 1.2px, transparent 1.3px);
+  background-size: 48px 48px;
+}
+
+.dark .up-desi-jaali {
+  background-image:
+    radial-gradient(circle at 24px 24px, rgba(245, 158, 11, 0.09) 1.4px, transparent 1.5px),
+    radial-gradient(circle at 0 0, rgba(34, 211, 238, 0.09) 1.2px, transparent 1.3px);
+  background-size: 48px 48px;
+}
+
+/* Custom sleek Material 3 slider */
+input[type="range"].up-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 9999px;
+  background: #dbeafe;
+  outline: none;
+}
+
+.dark input[type="range"].up-slider {
+  background: #1e293b;
+}
+
+input[type="range"].up-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #1d4ed8, #06b6d4);
+  border: 3px solid #ffffff;
+  box-shadow:
+    0 0 0 3px rgba(6, 182, 212, 0.25),
+    0 3px 12px rgba(29, 78, 216, 0.55);
+  cursor: pointer;
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input[type="range"].up-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.14);
+}
+
+input[type="range"].up-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #1d4ed8, #06b6d4);
+  border: 3px solid #ffffff;
+  box-shadow:
+    0 0 0 3px rgba(6, 182, 212, 0.25),
+    0 3px 12px rgba(29, 78, 216, 0.55);
+  cursor: pointer;
+}
+
+/* Safe bottom spacing on mobile */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .up-card-3d,
+  .up-md3-ripple,
+  .up-float-3d,
+  .up-neon-pulse,
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  .up-card-3d:hover {
+    transform: none !important;
+  }
+}

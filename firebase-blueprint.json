@@ -1,0 +1,523 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user account profile and privacy preferences. Email is isolated from public views.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "publicAlias": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160
+        },
+        "phoneNumber": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 24
+        },
+        "authProvider": {
+          "type": "string",
+          "enum": ["google", "phone"]
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "leaderboardOptIn": {
+          "type": "boolean"
+        },
+        "consentAccepted": {
+          "type": "boolean"
+        },
+        "isPro": {
+          "type": "boolean"
+        },
+        "membershipTier": {
+          "type": "string",
+          "enum": ["FREE"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "publicAlias", "leaderboardOptIn", "consentAccepted", "createdAt", "updatedAt"]
+    },
+    "UserPrediction": {
+      "title": "UserPrediction",
+      "description": "Individual user party-wise seat range, alliance prediction, and 403-constituency winner predictions synchronized across web and mobile.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "publicAlias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "membershipTier": {
+          "type": "string",
+          "enum": ["FREE"]
+        },
+        "partyBands": {
+          "type": "object",
+          "description": "Map of party code to 5-seat band start (0, 5, 10, ..., 400)."
+        },
+        "selectedPartySeats": {
+          "type": "object",
+          "description": "Aligned map of chosen party codes to readable band label and representative seat count."
+        },
+        "leadingParty": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "allianceBands": {
+          "type": "object",
+          "description": "Optional map of alliance code (NDA, INDIA, THIRD_FRONT, OTH_IND) to 5-seat band start (0, 5, 10, ..., 400)."
+        },
+        "selectedAllianceSeats": {
+          "type": "object",
+          "description": "Aligned map of alliance codes to readable band label and representative seat count."
+        },
+        "allianceAllocated": {
+          "type": "integer"
+        },
+        "leadingAlliance": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "totalAllocated": {
+          "type": "integer"
+        },
+        "constituencyPicks": {
+          "type": "object",
+          "description": "Map of AC number string ('1'..'403') to predicted candidate object including candidateName, party, alliance, constituencyName, and district."
+        },
+        "completedCount": {
+          "type": "integer"
+        },
+        "completionPercent": {
+          "type": "integer"
+        },
+        "isSubmitted": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "partyBands", "totalAllocated", "constituencyPicks", "completedCount", "completionPercent", "isSubmitted", "createdAt", "updatedAt"]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Publicly visible non-PII forecaster ranking entry eligible for the free ₹50 Lakh prizes & gifts pool.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "publicAlias": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "optIn": {
+          "type": "boolean"
+        },
+        "completionPercent": {
+          "type": "integer"
+        },
+        "completedSeats": {
+          "type": "integer"
+        },
+        "partyAllocated": {
+          "type": "integer"
+        },
+        "civicScore": {
+          "type": "integer"
+        },
+        "officialPoints": {
+          "type": "integer"
+        },
+        "correctConstituencies": {
+          "type": "integer"
+        },
+        "correctPartyBands": {
+          "type": "integer"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "publicAlias", "optIn", "completionPercent", "completedSeats", "partyAllocated", "civicScore", "officialPoints", "correctConstituencies", "correctPartyBands", "updatedAt"]
+    },
+    "Party": {
+      "title": "Party",
+      "description": "Political party metadata and historical UP Assembly seat tallies (2007, 2012, 2017, 2022).",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "color": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "order": {
+          "type": "integer"
+        },
+        "results2007": {
+          "type": "integer"
+        },
+        "results2012": {
+          "type": "integer"
+        },
+        "results2017": {
+          "type": "integer"
+        },
+        "results2022": {
+          "type": "integer"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["code", "name", "color", "active", "order", "results2007", "results2012", "results2017", "results2022", "updatedAt"]
+    },
+    "ConstituencyOverride": {
+      "title": "ConstituencyOverride",
+      "description": "Admin-imported or edited constituency historical data from CSV.",
+      "type": "object",
+      "properties": {
+        "acNo": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "district": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "totalElectors": {
+          "type": "integer"
+        },
+        "winnerName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "winnerParty": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "winnerVotes": {
+          "type": "integer"
+        },
+        "runnerUpName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "runnerUpParty": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "runnerUpVotes": {
+          "type": "integer"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["acNo", "name", "district", "updatedAt"]
+    },
+    "Candidate": {
+      "title": "Candidate",
+      "description": "2027 Assembly candidate managed by administrators.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "acNo": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "party": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "status": {
+          "type": "string",
+          "enum": ["HISTORICAL", "ANNOUNCED", "OFFICIAL", "WITHDRAWN"]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "photoUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "acNo", "name", "party", "status", "source", "updatedAt"]
+    },
+    "OfficialResult": {
+      "title": "OfficialResult",
+      "description": "Verified Election Commission of India constituency result.",
+      "type": "object",
+      "properties": {
+        "acNo": {
+          "type": "integer"
+        },
+        "winnerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "winnerParty": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "winnerVotes": {
+          "type": "integer"
+        },
+        "declared": {
+          "type": "boolean"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "verifiedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["acNo", "winnerName", "winnerParty", "winnerVotes", "declared", "sourceUrl", "verifiedAt"]
+    },
+    "ElectionConfig": {
+      "title": "ElectionConfig",
+      "description": "Global election cutoff, 7:00 AM IST counting lock, and statutory blackout controls.",
+      "type": "object",
+      "properties": {
+        "countingDateIso": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "deadlineIso": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "timezone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "isLocked": {
+          "type": "boolean"
+        },
+        "blackoutActive": {
+          "type": "boolean"
+        },
+        "blackoutMessage": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["countingDateIso", "deadlineIso", "timezone", "isLocked", "blackoutActive", "blackoutMessage", "updatedAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable administrative audit trail.",
+      "type": "object",
+      "properties": {
+        "actorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "actorEmail": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["actorUid", "action", "summary", "createdAt"]
+    },
+    "PrivacyRequest": {
+      "title": "PrivacyRequest",
+      "description": "User DPDP Act data export or deletion request.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "requestType": {
+          "type": "string",
+          "enum": ["DELETE_ACCOUNT", "DATA_EXPORT", "CORRECTION"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PENDING", "COMPLETED"]
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "requestType", "status", "createdAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized administrator registry.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "grantedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "grantedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profiles isolated by UID."
+    },
+    "/user_predictions/{userId}": {
+      "schema": { "$ref": "#/entities/UserPrediction" },
+      "description": "User party seat bands and 403 constituency picks."
+    },
+    "/leaderboard/{userId}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "Public alias rankings without email or PII."
+    },
+    "/parties/{partyId}": {
+      "schema": { "$ref": "#/entities/Party" },
+      "description": "Political parties and historical seat totals."
+    },
+    "/constituencies/{acNo}": {
+      "schema": { "$ref": "#/entities/ConstituencyOverride" },
+      "description": "Constituency records imported or updated by administrators."
+    },
+    "/candidates/{candidateId}": {
+      "schema": { "$ref": "#/entities/Candidate" },
+      "description": "Admin-managed 2027 Assembly candidates."
+    },
+    "/official_results/{acNo}": {
+      "schema": { "$ref": "#/entities/OfficialResult" },
+      "description": "Verified ECI constituency results."
+    },
+    "/election_config/{configId}": {
+      "schema": { "$ref": "#/entities/ElectionConfig" },
+      "description": "Election countdown, submission lock, and statutory blackout state."
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Append-only admin audit records."
+    },
+    "/privacy_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/PrivacyRequest" },
+      "description": "User DPDP data rights requests."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Database-backed admin RBAC lookup."
+    }
+  }
+}

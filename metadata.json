@@ -1,0 +1,8 @@
+{
+  "name": "UP Mandate",
+  "description": "Independent, non-monetary civic opinion and 403-constituency election forecasting platform for Uttar Pradesh Assembly elections.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

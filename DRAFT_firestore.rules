@@ -1,0 +1,410 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'niteshm505@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isPredictionOpen() {
+      return !exists(/databases/$(database)/documents/election_config/global) ||
+        get(/databases/$(database)/documents/election_config/global).data.isLocked == false;
+    }
+
+    function isPaidUserInDb(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)) &&
+        get(/databases/$(database)/documents/users/$(userId)).data.isPro == true &&
+        get(/databases/$(database)/documents/users/$(userId)).data.proAmountInr == 101;
+    }
+
+    // Entity Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'publicAlias', 'leaderboardOptIn', 'consentAccepted', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'displayName', 'publicAlias', 'email', 'photoURL', 'leaderboardOptIn', 'consentAccepted', 'isPro', 'membershipTier', 'razorpayPaymentId', 'proAmountInr', 'proButtonId', 'proActivatedAt', 'createdAt', 'updatedAt']) &&
+        isValidId(data.uid) &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+        data.publicAlias is string && data.publicAlias.size() >= 2 && data.publicAlias.size() <= 40 &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 160)) &&
+        (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500)) &&
+        data.leaderboardOptIn is bool &&
+        data.consentAccepted is bool &&
+        (!('isPro' in data) || data.isPro is bool) &&
+        (!('membershipTier' in data) || data.membershipTier in ['FREE', 'PRO', 'PREMIUM']) &&
+        (!('razorpayPaymentId' in data) || (data.razorpayPaymentId is string && data.razorpayPaymentId.size() >= 6 && data.razorpayPaymentId.size() <= 80 && data.razorpayPaymentId.matches('^pay_[a-zA-Z0-9_\\-]+$'))) &&
+        (!('proAmountInr' in data) || (data.proAmountInr is int && data.proAmountInr == 101)) &&
+        (!('proButtonId' in data) || (data.proButtonId is string && data.proButtonId.size() <= 60)) &&
+        (!('proActivatedAt' in data) || data.proActivatedAt is timestamp) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isProActivationAction() {
+      return incoming().isPro == true &&
+        incoming().membershipTier in ['PRO', 'PREMIUM'] &&
+        incoming().proAmountInr == 101 &&
+        incoming().proButtonId == 'pl_U1HMYyHCzVBvPu' &&
+        incoming().razorpayPaymentId is string &&
+        incoming().razorpayPaymentId.size() >= 6 &&
+        incoming().razorpayPaymentId.size() <= 80 &&
+        incoming().razorpayPaymentId.matches('^pay_[a-zA-Z0-9_\\-]+$') &&
+        incoming().proActivatedAt == request.time &&
+        incoming().updatedAt == request.time;
+    }
+
+    function isValidUserPrediction(data) {
+      return data.keys().hasAll(['uid', 'partyBands', 'totalAllocated', 'constituencyPicks', 'completedCount', 'completionPercent', 'isSubmitted', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'partyBands', 'totalAllocated', 'constituencyPicks', 'completedCount', 'completionPercent', 'isSubmitted', 'createdAt', 'updatedAt']) &&
+        isValidId(data.uid) &&
+        data.partyBands is map && data.partyBands.size() <= 20 &&
+        data.totalAllocated is int && data.totalAllocated >= 0 && data.totalAllocated <= 403 &&
+        data.constituencyPicks is map && data.constituencyPicks.size() <= 403 &&
+        data.completedCount is int && data.completedCount >= 0 && data.completedCount <= 403 &&
+        data.completionPercent is int && data.completionPercent >= 0 && data.completionPercent <= 100 &&
+        data.isSubmitted is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidLeaderboardEntry(data) {
+      return data.keys().hasAll(['uid', 'publicAlias', 'optIn', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'officialPoints', 'correctConstituencies', 'correctPartyBands', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'publicAlias', 'optIn', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'officialPoints', 'correctConstituencies', 'correctPartyBands', 'updatedAt']) &&
+        isValidId(data.uid) &&
+        data.publicAlias is string && data.publicAlias.size() >= 2 && data.publicAlias.size() <= 40 &&
+        data.optIn is bool &&
+        data.completionPercent is int && data.completionPercent >= 0 && data.completionPercent <= 100 &&
+        data.completedSeats is int && data.completedSeats >= 0 && data.completedSeats <= 403 &&
+        data.partyAllocated is int && data.partyAllocated >= 0 && data.partyAllocated <= 403 &&
+        data.civicScore is int && data.civicScore >= 0 && data.civicScore <= 1000 &&
+        data.officialPoints is int && data.officialPoints >= 0 && data.officialPoints <= 10000 &&
+        data.correctConstituencies is int && data.correctConstituencies >= 0 && data.correctConstituencies <= 403 &&
+        data.correctPartyBands is int && data.correctPartyBands >= 0 && data.correctPartyBands <= 20 &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidPremiumLeaderboardEntry(data) {
+      return data.keys().hasAll(['uid', 'publicAlias', 'optIn', 'membershipTier', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'officialPoints', 'correctConstituencies', 'correctPartyBands', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'publicAlias', 'optIn', 'membershipTier', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'officialPoints', 'correctConstituencies', 'correctPartyBands', 'updatedAt']) &&
+        isValidId(data.uid) &&
+        data.publicAlias is string && data.publicAlias.size() >= 2 && data.publicAlias.size() <= 40 &&
+        data.optIn is bool &&
+        data.membershipTier in ['PRO', 'PREMIUM'] &&
+        data.completionPercent is int && data.completionPercent >= 0 && data.completionPercent <= 100 &&
+        data.completedSeats is int && data.completedSeats >= 0 && data.completedSeats <= 403 &&
+        data.partyAllocated is int && data.partyAllocated >= 0 && data.partyAllocated <= 403 &&
+        data.civicScore is int && data.civicScore >= 0 && data.civicScore <= 1000 &&
+        data.officialPoints is int && data.officialPoints >= 0 && data.officialPoints <= 10000 &&
+        data.correctConstituencies is int && data.correctConstituencies >= 0 && data.correctConstituencies <= 403 &&
+        data.correctPartyBands is int && data.correctPartyBands >= 0 && data.correctPartyBands <= 20 &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidParty(data) {
+      return data.keys().hasAll(['code', 'name', 'color', 'active', 'order', 'results2007', 'results2012', 'results2017', 'results2022', 'updatedAt']) &&
+        data.keys().hasOnly(['code', 'name', 'color', 'active', 'order', 'results2007', 'results2012', 'results2017', 'results2022', 'updatedAt']) &&
+        data.code is string && data.code.size() >= 1 && data.code.size() <= 20 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.color is string && data.color.size() >= 3 && data.color.size() <= 20 &&
+        data.active is bool &&
+        data.order is int && data.order >= 0 && data.order <= 100 &&
+        data.results2007 is int && data.results2007 >= 0 && data.results2007 <= 403 &&
+        data.results2012 is int && data.results2012 >= 0 && data.results2012 <= 403 &&
+        data.results2017 is int && data.results2017 >= 0 && data.results2017 <= 403 &&
+        data.results2022 is int && data.results2022 >= 0 && data.results2022 <= 403 &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidConstituency(data) {
+      return data.keys().hasAll(['acNo', 'name', 'district', 'updatedAt']) &&
+        data.keys().hasOnly(['acNo', 'name', 'district', 'totalElectors', 'winnerName', 'winnerParty', 'winnerVotes', 'runnerUpName', 'runnerUpParty', 'runnerUpVotes', 'updatedAt']) &&
+        data.acNo is int && data.acNo >= 1 && data.acNo <= 403 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.district is string && data.district.size() >= 1 && data.district.size() <= 80 &&
+        (!('totalElectors' in data) || (data.totalElectors is int && data.totalElectors >= 0)) &&
+        (!('winnerName' in data) || (data.winnerName is string && data.winnerName.size() <= 120)) &&
+        (!('winnerParty' in data) || (data.winnerParty is string && data.winnerParty.size() <= 30)) &&
+        (!('winnerVotes' in data) || (data.winnerVotes is int && data.winnerVotes >= 0)) &&
+        (!('runnerUpName' in data) || (data.runnerUpName is string && data.runnerUpName.size() <= 120)) &&
+        (!('runnerUpParty' in data) || (data.runnerUpParty is string && data.runnerUpParty.size() <= 30)) &&
+        (!('runnerUpVotes' in data) || (data.runnerUpVotes is int && data.runnerUpVotes >= 0)) &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidCandidate(data) {
+      return data.keys().hasAll(['id', 'acNo', 'name', 'party', 'status', 'source', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'acNo', 'name', 'party', 'status', 'source', 'photoUrl', 'updatedAt']) &&
+        isValidId(data.id) &&
+        data.acNo is int && data.acNo >= 1 && data.acNo <= 403 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.party is string && data.party.size() >= 1 && data.party.size() <= 30 &&
+        data.status in ['HISTORICAL', 'ANNOUNCED', 'OFFICIAL', 'WITHDRAWN'] &&
+        data.source is string && data.source.size() >= 1 && data.source.size() <= 200 &&
+        (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidOfficialResult(data) {
+      return data.keys().hasAll(['acNo', 'winnerName', 'winnerParty', 'winnerVotes', 'declared', 'sourceUrl', 'verifiedAt']) &&
+        data.keys().hasOnly(['acNo', 'winnerName', 'winnerParty', 'winnerVotes', 'declared', 'sourceUrl', 'verifiedAt']) &&
+        data.acNo is int && data.acNo >= 1 && data.acNo <= 403 &&
+        data.winnerName is string && data.winnerName.size() >= 1 && data.winnerName.size() <= 120 &&
+        data.winnerParty is string && data.winnerParty.size() >= 1 && data.winnerParty.size() <= 30 &&
+        data.winnerVotes is int && data.winnerVotes >= 0 &&
+        data.declared is bool &&
+        data.sourceUrl is string && data.sourceUrl.size() >= 1 && data.sourceUrl.size() <= 500 &&
+        data.verifiedAt is timestamp;
+    }
+
+    function isValidElectionConfig(data) {
+      return data.keys().hasAll(['countingDateIso', 'deadlineIso', 'timezone', 'isLocked', 'blackoutActive', 'blackoutMessage', 'updatedAt']) &&
+        data.keys().hasOnly(['countingDateIso', 'deadlineIso', 'timezone', 'isLocked', 'blackoutActive', 'blackoutMessage', 'updatedAt']) &&
+        data.countingDateIso is string && data.countingDateIso.size() <= 60 &&
+        data.deadlineIso is string && data.deadlineIso.size() <= 60 &&
+        data.timezone is string && data.timezone.size() <= 40 &&
+        data.isLocked is bool &&
+        data.blackoutActive is bool &&
+        data.blackoutMessage is string && data.blackoutMessage.size() <= 500 &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['actorUid', 'action', 'summary', 'createdAt']) &&
+        data.keys().hasOnly(['actorUid', 'actorEmail', 'action', 'summary', 'createdAt']) &&
+        isValidId(data.actorUid) &&
+        (!('actorEmail' in data) || (data.actorEmail is string && data.actorEmail.size() <= 160)) &&
+        data.action is string && data.action.size() >= 1 && data.action.size() <= 100 &&
+        data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 500 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidPrivacyRequest(data) {
+      return data.keys().hasAll(['uid', 'requestType', 'status', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'requestType', 'status', 'notes', 'createdAt']) &&
+        isValidId(data.uid) &&
+        data.requestType in ['DELETE_ACCOUNT', 'DATA_EXPORT', 'CORRECTION'] &&
+        data.status in ['PENDING', 'COMPLETED'] &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+        data.createdAt is timestamp;
+    }
+
+    // Connection probe
+    match /test/connection {
+      allow get: if isSignedIn();
+    }
+
+    // 1. Private User Profiles
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(userId) && isOwner(userId) &&
+        isValidUserProfile(incoming()) &&
+        incoming().uid == userId &&
+        (!('isPro' in incoming()) || incoming().isPro == false) &&
+        (!('membershipTier' in incoming()) || incoming().membershipTier == 'FREE') &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) &&
+        isValidUserProfile(incoming()) && (
+          isAdmin() ||
+          (
+            isOwner(userId) &&
+            incoming().uid == existing().uid &&
+            incoming().createdAt == existing().createdAt &&
+            incoming().updatedAt == request.time && (
+              incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'publicAlias', 'photoURL', 'leaderboardOptIn', 'consentAccepted', 'updatedAt']) ||
+              (isProActivationAction() && incoming().diff(existing()).affectedKeys().hasOnly(['isPro', 'membershipTier', 'razorpayPaymentId', 'proAmountInr', 'proButtonId', 'proActivatedAt', 'updatedAt']))
+            )
+          )
+        );
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // 2. User Predictions
+    match /user_predictions/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(userId) && isOwner(userId) &&
+        isValidUserPrediction(incoming()) &&
+        incoming().uid == userId &&
+        isPredictionOpen() &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) &&
+        isValidUserPrediction(incoming()) && (
+          isAdmin() ||
+          (
+            isOwner(userId) &&
+            isPredictionOpen() &&
+            incoming().uid == existing().uid &&
+            incoming().createdAt == existing().createdAt &&
+            incoming().updatedAt == request.time &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['partyBands', 'totalAllocated', 'constituencyPicks', 'completedCount', 'completionPercent', 'isSubmitted', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // 3. Leaderboard (Non-PII)
+    match /leaderboard/{userId} {
+      allow get: if isValidId(userId) && isSignedIn() && (existing().optIn == true || isOwner(userId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.optIn == true || isAdmin());
+      allow create: if isValidId(userId) && isOwner(userId) &&
+        isValidLeaderboardEntry(incoming()) &&
+        incoming().uid == userId &&
+        incoming().officialPoints == 0 &&
+        incoming().correctConstituencies == 0 &&
+        incoming().correctPartyBands == 0 &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) &&
+        isValidLeaderboardEntry(incoming()) && (
+          isAdmin() ||
+          (
+            isOwner(userId) &&
+            incoming().uid == existing().uid &&
+            incoming().officialPoints == existing().officialPoints &&
+            incoming().correctConstituencies == existing().correctConstituencies &&
+            incoming().correctPartyBands == existing().correctPartyBands &&
+            incoming().updatedAt == request.time &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['publicAlias', 'optIn', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // 3b. Separate Premium Leaderboard (Strictly Paid ₹101 Members, Non-PII)
+    match /premium_leaderboard/{userId} {
+      allow get: if isValidId(userId) && isSignedIn() && (existing().optIn == true || isOwner(userId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.optIn == true || isAdmin());
+      allow create: if isValidId(userId) && isOwner(userId) &&
+        isValidPremiumLeaderboardEntry(incoming()) &&
+        incoming().uid == userId &&
+        incoming().officialPoints == 0 &&
+        incoming().correctConstituencies == 0 &&
+        incoming().correctPartyBands == 0 &&
+        incoming().updatedAt == request.time &&
+        isPaidUserInDb(userId);
+      allow update: if isValidId(userId) &&
+        isValidPremiumLeaderboardEntry(incoming()) && (
+          isAdmin() ||
+          (
+            isOwner(userId) &&
+            isPaidUserInDb(userId) &&
+            incoming().uid == existing().uid &&
+            incoming().officialPoints == existing().officialPoints &&
+            incoming().correctConstituencies == existing().correctConstituencies &&
+            incoming().correctPartyBands == existing().correctPartyBands &&
+            incoming().updatedAt == request.time &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['publicAlias', 'optIn', 'membershipTier', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // 4. Political Parties (Catalog)
+    match /parties/{partyId} {
+      allow get: if isValidId(partyId) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(partyId) && isAdmin() && isValidParty(incoming()) && incoming().updatedAt == request.time;
+      allow update: if isValidId(partyId) && isAdmin() && isValidParty(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isValidId(partyId) && isAdmin();
+    }
+
+    // 5. Constituencies (Admin CSV Overrides)
+    match /constituencies/{acNo} {
+      allow get: if isValidId(acNo) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(acNo) && isAdmin() && isValidConstituency(incoming()) && incoming().updatedAt == request.time;
+      allow update: if isValidId(acNo) && isAdmin() && isValidConstituency(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isValidId(acNo) && isAdmin();
+    }
+
+    // 6. Candidates (Admin Managed 2027 List)
+    match /candidates/{candidateId} {
+      allow get: if isValidId(candidateId) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(candidateId) && isAdmin() && isValidCandidate(incoming()) && incoming().updatedAt == request.time;
+      allow update: if isValidId(candidateId) && isAdmin() && isValidCandidate(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isValidId(candidateId) && isAdmin();
+    }
+
+    // 7. Official Results (Verified ECI)
+    match /official_results/{acNo} {
+      allow get: if isValidId(acNo) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(acNo) && isAdmin() && isValidOfficialResult(incoming()) && incoming().verifiedAt == request.time;
+      allow update: if isValidId(acNo) && isAdmin() && isValidOfficialResult(incoming()) && incoming().verifiedAt == request.time;
+      allow delete: if isValidId(acNo) && isAdmin();
+    }
+
+    // 8. Election Configuration
+    match /election_config/{configId} {
+      allow get: if isValidId(configId) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(configId) && isAdmin() && isValidElectionConfig(incoming()) && incoming().updatedAt == request.time;
+      allow update: if isValidId(configId) && isAdmin() && isValidElectionConfig(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isValidId(configId) && isAdmin();
+    }
+
+    // 9. Audit Logs (Append-only)
+    match /audit_logs/{logId} {
+      allow get: if isValidId(logId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(logId) && isAdmin() && isValidAuditLog(incoming()) && incoming().createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    // 10. Privacy Requests
+    match /privacy_requests/{requestId} {
+      allow get: if isValidId(requestId) && isSignedIn() && (existing().uid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isValidId(requestId) && isVerifiedUser() &&
+        isValidPrivacyRequest(incoming()) &&
+        incoming().uid == request.auth.uid &&
+        incoming().status == 'PENDING' &&
+        incoming().createdAt == request.time;
+      allow update: if isValidId(requestId) && isAdmin() && isValidPrivacyRequest(incoming()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes']);
+      allow delete: if isValidId(requestId) && isAdmin();
+    }
+
+    // 11. Admin Registry
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && isAdmin();
+      allow list: if isAdmin();
+      allow create, update, delete: if isValidId(userId) && isAdmin();
+    }
+  }
+}
