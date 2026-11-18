@@ -331,11 +331,11 @@ export function getPartyColor(code: string): string {
 }
 
 export const DEFAULT_PARTY_BANDS: Record<string, number> = {
-  BJP: 160,
-  SP: 140,
-  BSP: 20,
-  INC: 20,
-  RLD: 20,
+  BJP: 0,
+  SP: 0,
+  BSP: 0,
+  INC: 0,
+  RLD: 0,
   AD: 0,
   NISHAD: 0,
   SBSP: 0,

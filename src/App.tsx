@@ -101,15 +101,52 @@ const DEFAULT_ELECTION_CONFIG: ElectionConfigData = {
     'Statutory Section 126 election silence period is active. Public forecasts are paused.',
 };
 
+function isLegacyPrefilledPartyBands(bands?: Record<string, number>): boolean {
+  if (!bands) return false;
+  return (
+    bands.BJP === 160 &&
+    bands.SP === 140 &&
+    bands.BSP === 20 &&
+    bands.INC === 20 &&
+    bands.RLD === 20 &&
+    (bands.AD ?? 0) === 0 &&
+    (bands.NISHAD ?? 0) === 0 &&
+    (bands.SBSP ?? 0) === 0 &&
+    (bands.AIMIM ?? 0) === 0 &&
+    (bands.ASP ?? 0) === 0 &&
+    (bands.JANSATTA ?? 0) === 0 &&
+    (bands.OTH ?? 0) === 0
+  );
+}
+
+function isLegacyPrefilledAllianceBands(bands?: Record<string, number>): boolean {
+  if (!bands) return false;
+  return (
+    bands.NDA === 180 &&
+    bands.INDIA === 160 &&
+    (bands.THIRD_FRONT ?? 0) === 0 &&
+    bands.OTH_IND === 20
+  );
+}
+
 function buildInitialPrediction(uid = 'guest'): UserPredictionData {
   try {
     const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<UserPredictionData>;
-      const partyBands = { ...DEFAULT_PARTY_BANDS, ...(parsed.partyBands || {}) };
-      const allianceBands = { ...DEFAULT_ALLIANCE_BANDS, ...(parsed.allianceBands || {}) };
       const constituencyPicks = parsed.constituencyPicks || {};
       const completedCount = Object.keys(constituencyPicks).length;
+      const isSubmitted = Boolean(parsed.isSubmitted);
+      const rawPartyBands =
+        !isSubmitted && completedCount === 0 && isLegacyPrefilledPartyBands(parsed.partyBands)
+          ? {}
+          : parsed.partyBands || {};
+      const rawAllianceBands =
+        !isSubmitted && completedCount === 0 && isLegacyPrefilledAllianceBands(parsed.allianceBands)
+          ? {}
+          : parsed.allianceBands || {};
+      const partyBands = { ...DEFAULT_PARTY_BANDS, ...rawPartyBands };
+      const allianceBands = { ...DEFAULT_ALLIANCE_BANDS, ...rawAllianceBands };
       return {
         uid,
         partyBands,
@@ -118,7 +155,7 @@ function buildInitialPrediction(uid = 'guest'): UserPredictionData {
         constituencyPicks,
         completedCount,
         completionPercent: Math.round((completedCount / TOTAL_UP_SEATS) * 100),
-        isSubmitted: Boolean(parsed.isSubmitted),
+        isSubmitted,
         lastSyncedAtMs: parsed.lastSyncedAtMs,
       };
     }

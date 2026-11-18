@@ -65,10 +65,10 @@ export const UP_ALLIANCES: AllianceConfig[] = [
 ];
 
 export const DEFAULT_ALLIANCE_BANDS: Record<string, number> = {
-  NDA: 180,
-  INDIA: 160,
+  NDA: 0,
+  INDIA: 0,
   THIRD_FRONT: 0,
-  OTH_IND: 20,
+  OTH_IND: 0,
 };
 
 export function getHistoricalAllianceSeats(
