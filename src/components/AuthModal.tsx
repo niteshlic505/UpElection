@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { RecaptchaVerifier, auth, signInWithPhoneNumber } from '../firebase';
+import firebaseConfig from '../../firebase-applet-config.json';
 import { AppLanguage } from '../types/election';
 import { TRANSLATIONS } from '../i18n/translations';
 
@@ -47,6 +48,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [otpDigits, setOtpDigits] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [recaptchaMode, setRecaptchaMode] = useState<'invisible' | 'normal'>('invisible');
+  const [recaptchaLoading, setRecaptchaLoading] = useState(false);
+  const [recaptchaReady, setRecaptchaReady] = useState(false);
+  const [recaptchaSolved, setRecaptchaSolved] = useState(false);
+  const [recaptchaMountNonce, setRecaptchaMountNonce] = useState(0);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
@@ -70,6 +75,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (recaptchaMountRef.current) {
       recaptchaMountRef.current.innerHTML = '';
     }
+    setRecaptchaReady(false);
+    setRecaptchaSolved(false);
+    setRecaptchaLoading(false);
   };
 
   useEffect(() => {
@@ -85,46 +93,75 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   useEffect(() => {
     if (!open || step !== 'phone' || recaptchaMode !== 'normal') return;
     let cancelled = false;
-    const mountTimer = setTimeout(() => {
+    setRecaptchaLoading(true);
+    setRecaptchaReady(false);
+    setRecaptchaSolved(false);
+
+    const mountTimer = setTimeout(async () => {
       if (cancelled || !recaptchaMountRef.current) return;
       clearVerifier();
+      if (cancelled) return;
+      setRecaptchaLoading(true);
+
       try {
+        auth.languageCode = language === 'hi' ? 'hi' : 'en';
         const widgetNode = document.createElement('div');
         recaptchaMountRef.current.appendChild(widgetNode);
         const verifier = new RecaptchaVerifier(auth, widgetNode, {
           size: 'normal',
           callback: () => {
-            setErrorMsg(null);
+            if (!cancelled) {
+              setRecaptchaSolved(true);
+              setErrorMsg(null);
+            }
           },
           'expired-callback': () => {
-            setErrorMsg(
-              language === 'hi'
-                ? 'सुरक्षा सत्यापन समय समाप्त हो गया। कृपया बॉक्स पर पुनः टिक करें।'
-                : 'Security check expired. Please tick the box again.',
-            );
+            if (!cancelled) {
+              setRecaptchaSolved(false);
+              setErrorMsg(
+                language === 'hi'
+                  ? 'सुरक्षा सत्यापन समय समाप्त हो गया। कृपया बॉक्स पर पुनः टिक करें।'
+                  : 'Security check expired. Please tick the "I\'m not a robot" box again.',
+              );
+            }
           },
           'error-callback': () => {
-            setErrorMsg(
-              language === 'hi'
-                ? 'reCAPTCHA लोड नहीं हो सका। कृपया Ad-blocker बंद करके पुनः प्रयास करें।'
-                : 'Could not load reCAPTCHA. Please disable ad/tracker blockers and retry.',
-            );
+            if (!cancelled) {
+              setRecaptchaSolved(false);
+              setErrorMsg(
+                language === 'hi'
+                  ? 'reCAPTCHA लोड नहीं हो सका। कृपया Ad-blocker बंद करके पुनः प्रयास करें।'
+                  : 'Could not load reCAPTCHA widget. Disable ad/tracker blockers or check Authorized Domains in Firebase Console.',
+              );
+            }
           },
         });
         verifierRef.current = verifier;
-        void verifier.render().catch(() => {
-          // handled on submit if render fails
-        });
-      } catch {
-        // handled on submit
+        await verifier.render();
+        if (!cancelled) {
+          setRecaptchaReady(true);
+          setRecaptchaLoading(false);
+        }
+      } catch (renderErr) {
+        if (!cancelled) {
+          setRecaptchaLoading(false);
+          setRecaptchaReady(false);
+          const renderCode = getFirebaseErrorCode(renderErr);
+          const renderText = renderErr instanceof Error ? renderErr.message : String(renderErr);
+          setErrorMsg(
+            language === 'hi'
+              ? `सुरक्षा जांच बॉक्स लोड नहीं हो सका (${renderCode || renderText})। कृपया Ad-blocker बंद करें या Reload दबाएं।`
+              : `Could not render security check box (${renderCode || renderText}). Disable ad blockers or click Reload Check below.`,
+          );
+        }
       }
-    }, 50);
+    }, 60);
 
     return () => {
       cancelled = true;
       clearTimeout(mountTimer);
     };
-  }, [open, step, recaptchaMode, language]);
+  }, [open, step, recaptchaMode, language, recaptchaMountNonce]);
 
   useEffect(() => {
     if (resendTimer <= 0) return;
@@ -149,11 +186,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       ? String((err as { code?: unknown }).code)
       : '';
 
-  const mapFirebasePhoneError = (err: unknown): string => {
+  const checkCurrentDomainAuthorized = async (): Promise<boolean | null> => {
+    if (typeof window === 'undefined' || !firebaseConfig.apiKey) return null;
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=${encodeURIComponent(firebaseConfig.apiKey)}`,
+      );
+      if (!res.ok) return null;
+      const data = (await res.json()) as { authorizedDomains?: string[] };
+      if (!Array.isArray(data.authorizedDomains)) return null;
+      const host = window.location.hostname.toLowerCase();
+      return data.authorizedDomains.some((d) => d.toLowerCase() === host);
+    } catch {
+      return null;
+    }
+  };
+
+  const mapFirebasePhoneError = (err: unknown, domainAuthorized: boolean | null = null): string => {
     const code = getFirebaseErrorCode(err);
     const msg = err instanceof Error ? err.message : String(err);
     const currentHost =
       typeof window !== 'undefined' ? window.location.hostname : 'this domain';
+
+    if (domainAuthorized === false) {
+      return language === 'hi'
+        ? `डोमेन "${currentHost}" Firebase Authorized Domains में जोड़ा नहीं गया है। Firebase Console (${firebaseConfig.projectId}) → Authentication → Settings → Authorized domains में "${currentHost}" जोड़ें, फिर पुनः प्रयास करें। [${code || 'unauthorized-domain'}]`
+        : `Domain "${currentHost}" is NOT added to Firebase Authorized Domains yet. Open Firebase Console (${firebaseConfig.projectId}) → Authentication → Settings → Authorized domains → Add domain "${currentHost}", then try again. [${code || 'unauthorized-domain'}]`;
+    }
 
     if (code === 'auth/invalid-phone-number') {
       return language === 'hi'
@@ -177,13 +236,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
     if (code === 'auth/operation-not-allowed') {
       return language === 'hi'
-        ? 'Firebase Console -> Authentication -> Sign-in method में Phone प्रदाता सक्रिय करें।'
-        : 'Phone sign-in is disabled in Firebase Console. Enable it under Authentication -> Sign-in method -> Phone.';
+        ? 'Firebase Console → Authentication → Sign-in method में Phone प्रदाता सक्रिय करें।'
+        : 'Phone sign-in is disabled in Firebase Console. Enable it under Authentication → Sign-in method → Phone.';
     }
     if (code === 'auth/billing-not-enabled') {
       return language === 'hi'
         ? 'लाइव SMS OTP के लिए Firebase प्रोजेक्ट पर Blaze प्लान या "Phone numbers for testing" जोड़ना आवश्यक है।'
-        : 'Firebase requires Blaze billing enabled for live SMS OTPs (or add test phone numbers under Authentication -> Sign-in method -> Phone -> Phone numbers for testing).';
+        : 'Firebase requires Blaze billing enabled for live SMS OTPs (or add test phone numbers under Authentication → Sign-in method → Phone → Phone numbers for testing).';
     }
     if (code === 'auth/quota-exceeded') {
       return language === 'hi'
@@ -192,26 +251,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
     if (code === 'auth/unauthorized-domain' || code === 'auth/app-not-authorized') {
       return language === 'hi'
-        ? `डोमेन "${currentHost}" को Firebase Console -> Authentication -> Settings -> Authorized domains में जोड़ें।`
-        : `Add "${currentHost}" to Firebase Console -> Authentication -> Settings -> Authorized domains so SMS OTP can send.`;
+        ? `डोमेन "${currentHost}" को Firebase Console → Authentication → Settings → Authorized domains में जोड़ें। [${code}]`
+        : `Add "${currentHost}" to Firebase Console → Authentication → Settings → Authorized domains so SMS OTP can send. [${code}]`;
+    }
+    if (code === 'auth/invalid-app-credential' || code === 'auth/missing-app-credential') {
+      return language === 'hi'
+        ? `ऐप/डोमेन सत्यापन विफल रहा (${code})। सुनिश्चित करें कि "${currentHost}" Firebase Authorized Domains में जुड़ा है और नीचे सुरक्षा बॉक्स पूरा करें।`
+        : `App verification failed (${code}). Ensure "${currentHost}" is listed under Firebase Console → Authentication → Settings → Authorized domains, then complete the "I'm not a robot" check below.`;
     }
     if (
       code === 'auth/captcha-check-failed' ||
-      code === 'auth/invalid-app-credential' ||
-      code === 'auth/missing-app-credential' ||
       code === 'auth/missing-client-identifier' ||
       msg.toLowerCase().includes('recaptcha')
     ) {
       return language === 'hi'
-        ? 'सुरक्षा जांच (reCAPTCHA) पूरी नहीं हो सकी। कृपया नीचे दिए गए "I\'m not a robot" बॉक्स को टिक करें और फिर OTP भेजें।'
-        : 'Security verification (reCAPTCHA) could not verify automatically. Please complete the "I\'m not a robot" checkbox below and tap Send OTP again (disable ad blockers if hidden).';
+        ? `सुरक्षा जांच (reCAPTCHA) स्वतः सत्यापित नहीं हो सकी (${code || 'reCAPTCHA'})। कृपया नीचे "I'm not a robot" बॉक्स टिक करें और पुनः OTP भेजें।`
+        : `Security verification (reCAPTCHA) could not verify automatically (${code || 'reCAPTCHA'}). Please complete the "I'm not a robot" checkbox below and tap Send Verification OTP again.`;
     }
     if (code === 'auth/network-request-failed') {
       return language === 'hi'
         ? 'नेटवर्क कनेक्शन या Ad-blocker ने OTP अनुरोध को रोक दिया। कृपया इंटरनेट जाँचें या Ad-blocker बंद करें।'
         : 'Network error or browser extension blocked Google Firebase verification. Disable ad blockers and check your connection.';
     }
-    return msg || 'Could not complete OTP authentication.';
+    return code ? `${msg} [${code}]` : msg || 'Could not complete OTP authentication.';
   };
 
   const handleSendOtp = async (e?: React.FormEvent) => {
@@ -235,6 +297,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           : 'Please enter a valid mobile number.',
       );
       return;
+    }
+
+    if (recaptchaMode === 'normal') {
+      if (!verifierRef.current || !recaptchaReady) {
+        setRecaptchaMountNonce((n) => n + 1);
+        setErrorMsg(
+          language === 'hi'
+            ? 'सुरक्षा जांच बॉक्स लोड हो रहा है। कृपया लोड होने के बाद बॉक्स पर टिक करें।'
+            : 'Security check box is loading. Please wait for it to appear, tick "I\'m not a robot", and tap Send Verification OTP.',
+        );
+        return;
+      }
+      if (!recaptchaSolved) {
+        setErrorMsg(
+          language === 'hi'
+            ? 'कृपया पहले नीचे दिए गए "I\'m not a robot" बॉक्स पर टिक करें, फिर OTP भेजें।'
+            : 'Please tick the "I\'m not a robot" checkbox below before tapping Send Verification OTP.',
+        );
+        return;
+      }
     }
 
     const e164Phone = `${countryCode}${cleanDigits}`;
@@ -275,11 +357,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         code === 'auth/missing-client-identifier' ||
         (err instanceof Error && err.message.toLowerCase().includes('recaptcha'));
 
+      const domainAuthorized =
+        isCaptchaIssue || code === 'auth/unauthorized-domain' || code === 'auth/app-not-authorized'
+          ? await checkCurrentDomainAuthorized()
+          : null;
+
       clearVerifier();
-      if (isCaptchaIssue && recaptchaMode === 'invisible') {
+      if (domainAuthorized !== false && isCaptchaIssue && recaptchaMode === 'invisible') {
         setRecaptchaMode('normal');
+      } else if (recaptchaMode === 'normal') {
+        setRecaptchaMountNonce((n) => n + 1);
       }
-      setErrorMsg(mapFirebasePhoneError(err));
+      setErrorMsg(mapFirebasePhoneError(err, domainAuthorized));
     } finally {
       setSendingOtp(false);
     }
@@ -452,11 +541,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
+              {errorMsg && (
+                <div className="rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-3 text-xs font-semibold text-rose-700 dark:text-rose-300 leading-relaxed break-words">
+                  {errorMsg}
+                </div>
+              )}
+
               {/* Visible reCAPTCHA mount container (NEVER display:none so challenge iframe & checkbox always render cleanly) */}
               <div
-                ref={recaptchaMountRef}
-                className="flex justify-center overflow-x-auto min-h-[2px]"
-              />
+                className={
+                  recaptchaMode === 'normal'
+                    ? 'rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-900/60 p-3 flex flex-col items-center justify-center gap-2 min-h-[92px]'
+                    : 'flex justify-center overflow-x-auto min-h-[2px]'
+                }
+              >
+                {recaptchaMode === 'normal' && recaptchaLoading && (
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-300 flex items-center gap-2">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>
+                      {language === 'hi'
+                        ? 'सुरक्षा जांच ("I\'m not a robot") लोड हो रहा है...'
+                        : 'Loading "I\'m not a robot" security check...'}
+                    </span>
+                  </div>
+                )}
+                <div
+                  ref={recaptchaMountRef}
+                  className="flex justify-center overflow-x-auto max-w-full"
+                />
+                {recaptchaMode === 'normal' && !recaptchaLoading && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMsg(null);
+                      setRecaptchaMountNonce((n) => n + 1);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-400 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>
+                      {language === 'hi'
+                        ? 'सुरक्षा बॉक्स पुनः लोड करें'
+                        : 'Reload security check'}
+                    </span>
+                  </button>
+                )}
+              </div>
 
               <button
                 type="submit"
@@ -472,6 +602,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   onClick={() => {
                     setErrorMsg(null);
+                    clearVerifier();
                     setRecaptchaMode((m) => (m === 'invisible' ? 'normal' : 'invisible'));
                   }}
                   className="text-[11px] font-semibold text-blue-600 dark:text-cyan-400 hover:underline cursor-pointer"
@@ -514,6 +645,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
+              {errorMsg && (
+                <div className="rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-3 text-xs font-semibold text-rose-700 dark:text-rose-300 leading-relaxed break-words">
+                  {errorMsg}
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={verifyingOtp}
@@ -550,12 +687,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </button>
               </div>
             </form>
-          )}
-
-          {errorMsg && (
-            <div className="rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-3 text-xs font-semibold text-rose-700 dark:text-rose-300 leading-relaxed break-words">
-              {errorMsg}
-            </div>
           )}
 
           {/* Divider */}
