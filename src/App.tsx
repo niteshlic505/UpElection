@@ -34,16 +34,24 @@ import {
   Smartphone,
   Trophy,
   User as UserIcon,
+  X,
 } from 'lucide-react';
 import {
   BOOTSTRAPPED_ADMIN_EMAIL,
   OperationType,
   auth,
+  browserPopupRedirectResolver,
+  checkCurrentDomainAuthorized,
   db,
+  getFirebaseErrorCode,
+  getRedirectResult,
   googleProvider,
   handleFirestoreError,
   handleRealtimeListenerError,
+  isInsideIframe,
   isOfflineFirestoreError,
+  mapFirebaseAuthError,
+  signInWithRedirect,
   testConnection,
 } from './firebase';
 import {
@@ -236,6 +244,7 @@ export default function App() {
   const [allUsers, setAllUsers] = useState<UserProfileData[]>([]);
   const [allUserPredictions, setAllUserPredictions] = useState<UserPredictionData[]>([]);
   const autoSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const profileEnsureLockRef = useRef<Map<string, Promise<void>>>(new Map());
 
   const [isSaving, setIsSaving] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -282,6 +291,128 @@ export default function App() {
     void testConnection();
   }, []);
 
+  // Serialized, idempotent user profile loader/initializer (prevents setDoc race between onAuthStateChanged & OTP verify)
+  const ensureUserProfile = useCallback(
+    async (user: User, preferredName?: string) => {
+      const existingLock = profileEnsureLockRef.current.get(user.uid);
+      if (existingLock) {
+        await existingLock;
+      }
+
+      const cleanPreferred = preferredName?.trim().slice(0, 80);
+
+      const runPromise = (async () => {
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+
+          const isPhoneOnly =
+            Boolean(user.phoneNumber) &&
+            !user.email &&
+            user.providerData.some((p) => p.providerId === 'phone');
+          const authProvider: 'google' | 'phone' = isPhoneOnly ? 'phone' : 'google';
+          const phoneSuffix = user.phoneNumber ? user.phoneNumber.slice(-4) : '';
+          const rawFallbackName =
+            cleanPreferred ||
+            user.displayName ||
+            (phoneSuffix ? `UP Citizen ${phoneSuffix}` : 'UP Citizen');
+          const defaultAlias = (
+            cleanPreferred ||
+            user.displayName ||
+            (phoneSuffix ? `UP_${phoneSuffix}` : 'UP Forecaster')
+          ).slice(0, 40);
+          const validAlias = defaultAlias.length >= 2 ? defaultAlias : 'UP Citizen';
+
+          if (!userSnap.exists()) {
+            const newProfile: Record<string, unknown> = {
+              uid: user.uid,
+              displayName: rawFallbackName.slice(0, 80),
+              publicAlias: validAlias,
+              authProvider,
+              membershipTier: 'FREE',
+              isPro: false,
+              leaderboardOptIn: true,
+              consentAccepted: true,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            };
+            if (user.email) newProfile.email = user.email.slice(0, 160);
+            if (user.phoneNumber) newProfile.phoneNumber = user.phoneNumber.slice(0, 24);
+            if (user.photoURL) newProfile.photoURL = user.photoURL.slice(0, 500);
+
+            await setDoc(userRef, newProfile);
+            setUserProfile({
+              uid: user.uid,
+              displayName: String(newProfile.displayName),
+              publicAlias: validAlias,
+              email: user.email || undefined,
+              phoneNumber: user.phoneNumber || undefined,
+              authProvider,
+              membershipTier: 'FREE',
+              photoURL: user.photoURL || undefined,
+              leaderboardOptIn: true,
+              consentAccepted: true,
+            });
+          } else {
+            const data = userSnap.data() as UserProfileData;
+            if (cleanPreferred && cleanPreferred.length >= 2 && data.displayName !== cleanPreferred) {
+              const updatedAlias = cleanPreferred.slice(0, 40);
+              await updateDoc(userRef, {
+                displayName: cleanPreferred,
+                publicAlias: updatedAlias,
+                updatedAt: serverTimestamp(),
+              });
+              setUserProfile({
+                ...data,
+                displayName: cleanPreferred,
+                publicAlias: updatedAlias,
+                phoneNumber: data.phoneNumber || user.phoneNumber || undefined,
+                authProvider: data.authProvider || authProvider,
+              });
+            } else {
+              setUserProfile({
+                ...data,
+                phoneNumber: data.phoneNumber || user.phoneNumber || undefined,
+                authProvider: data.authProvider || authProvider,
+              });
+            }
+          }
+        } catch (err) {
+          if (isOfflineFirestoreError(err)) {
+            const phoneSuffix = user.phoneNumber ? user.phoneNumber.slice(-4) : '';
+            const fallbackAlias = (
+              cleanPreferred ||
+              user.displayName ||
+              (phoneSuffix ? `UP_${phoneSuffix}` : 'UP Citizen')
+            ).slice(0, 40);
+            setUserProfile({
+              uid: user.uid,
+              displayName: (cleanPreferred || user.displayName || 'Citizen').slice(0, 80),
+              publicAlias: fallbackAlias.length >= 2 ? fallbackAlias : 'UP Citizen',
+              email: user.email || undefined,
+              phoneNumber: user.phoneNumber || undefined,
+              authProvider: user.phoneNumber && !user.email ? 'phone' : 'google',
+              membershipTier: 'FREE',
+              photoURL: user.photoURL || undefined,
+              leaderboardOptIn: true,
+              consentAccepted: true,
+            });
+          } else {
+            handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`);
+          }
+        }
+      })();
+
+      profileEnsureLockRef.current.set(user.uid, runPromise);
+      try {
+        await runPromise;
+      } finally {
+        profileEnsureLockRef.current.delete(user.uid);
+      }
+    },
+    [],
+  );
+
   // Auth listener
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -294,90 +425,14 @@ export default function App() {
         return;
       }
 
+      setAuthError(null);
       const strictAdmin = isStrictGoogleAdmin(user);
       setIsAdminUser(strictAdmin);
-
-      try {
-        // Load or initialize /users/{uid}
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-
-        const isPhoneOnly =
-          Boolean(user.phoneNumber) &&
-          !user.email &&
-          user.providerData.some((p) => p.providerId === 'phone');
-        const authProvider: 'google' | 'phone' = isPhoneOnly ? 'phone' : 'google';
-        const phoneSuffix = user.phoneNumber ? user.phoneNumber.slice(-4) : '';
-        const rawFallbackName =
-          user.displayName || (phoneSuffix ? `UP Citizen ${phoneSuffix}` : 'UP Citizen');
-        const defaultAlias = (
-          user.displayName || (phoneSuffix ? `UP_${phoneSuffix}` : 'UP Forecaster')
-        ).slice(0, 40);
-
-        if (!userSnap.exists()) {
-          const newProfile: Record<string, unknown> = {
-            uid: user.uid,
-            displayName: rawFallbackName.slice(0, 80),
-            publicAlias: defaultAlias.length >= 2 ? defaultAlias : 'UP Citizen',
-            authProvider,
-            membershipTier: 'FREE',
-            isPro: false,
-            leaderboardOptIn: true,
-            consentAccepted: true,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          };
-          if (user.email) newProfile.email = user.email.slice(0, 160);
-          if (user.phoneNumber) newProfile.phoneNumber = user.phoneNumber.slice(0, 24);
-          if (user.photoURL) newProfile.photoURL = user.photoURL.slice(0, 500);
-
-          await setDoc(userRef, newProfile);
-          setUserProfile({
-            uid: user.uid,
-            displayName: String(newProfile.displayName),
-            publicAlias: String(newProfile.publicAlias),
-            email: user.email || undefined,
-            phoneNumber: user.phoneNumber || undefined,
-            authProvider,
-            membershipTier: 'FREE',
-            photoURL: user.photoURL || undefined,
-            leaderboardOptIn: true,
-            consentAccepted: true,
-          });
-        } else {
-          const data = userSnap.data() as UserProfileData;
-          setUserProfile({
-            ...data,
-            phoneNumber: data.phoneNumber || user.phoneNumber || undefined,
-            authProvider: data.authProvider || authProvider,
-          });
-        }
-      } catch (err) {
-        if (isOfflineFirestoreError(err)) {
-          const phoneSuffix = user.phoneNumber ? user.phoneNumber.slice(-4) : '';
-          const fallbackAlias = (
-            user.displayName || (phoneSuffix ? `UP_${phoneSuffix}` : 'UP Citizen')
-          ).slice(0, 40);
-          setUserProfile({
-            uid: user.uid,
-            displayName: (user.displayName || 'Citizen').slice(0, 80),
-            publicAlias: fallbackAlias.length >= 2 ? fallbackAlias : 'UP Citizen',
-            email: user.email || undefined,
-            phoneNumber: user.phoneNumber || undefined,
-            authProvider: user.phoneNumber && !user.email ? 'phone' : 'google',
-            membershipTier: 'FREE',
-            photoURL: user.photoURL || undefined,
-            leaderboardOptIn: true,
-            consentAccepted: true,
-          });
-        } else {
-          handleFirestoreError(err, OperationType.GET, `users/${user.uid}`);
-        }
-      }
+      await ensureUserProfile(user);
     });
 
     return () => unsub();
-  }, []);
+  }, [ensureUserProfile]);
 
   // Firestore real-time listeners (strictly gated on authReady && firebaseUser)
   useEffect(() => {
@@ -595,10 +650,11 @@ export default function App() {
         // ignore storage quota errors
       }
 
-      if (!firebaseUser) return;
+      const activeUser = firebaseUser ?? auth.currentUser;
+      if (!activeUser) return;
 
       setIsSaving(true);
-      const uid = firebaseUser.uid;
+      const uid = activeUser.uid;
       const predRef = doc(db, 'user_predictions', uid);
       const lbRef = doc(db, 'leaderboard', uid);
 
@@ -615,7 +671,7 @@ export default function App() {
         const alliancePayload = nextPred.allianceBands || DEFAULT_ALLIANCE_BANDS;
         const safeAliasForPred = (
           userProfile?.publicAlias ||
-          firebaseUser.displayName ||
+          activeUser.displayName ||
           'UP Citizen'
         ).slice(0, 40);
         const finalAliasForPred = safeAliasForPred.length >= 1 ? safeAliasForPred : 'UP Citizen';
@@ -705,7 +761,7 @@ export default function App() {
           });
         }
 
-        const alias = (userProfile?.publicAlias || firebaseUser.displayName || 'UP Citizen').slice(0, 40);
+        const alias = (userProfile?.publicAlias || activeUser.displayName || 'UP Citizen').slice(0, 40);
         const safeAlias = alias.length >= 2 ? alias : 'UP Citizen';
         const existingLb = await getDoc(lbRef);
         if (!existingLb.exists()) {
@@ -744,99 +800,101 @@ export default function App() {
     [firebaseUser, userProfile],
   );
 
-  const handleGoogleSignIn = async () => {
-    setAuthError(null);
-    try {
-      const cred = await signInWithPopup(auth, googleProvider);
-      if (cred.user) {
-        setAuthModalOpen(false);
-        // Check if cloud prediction already exists; if not, sync local draft up!
-        const snap = await getDoc(doc(db, 'user_predictions', cred.user.uid));
+  const syncGuestDraftIfNew = useCallback(
+    async (uid: string) => {
+      try {
+        const snap = await getDoc(doc(db, 'user_predictions', uid));
         if (!snap.exists()) {
-          await persistPredictionToCloud({ ...prediction, uid: cred.user.uid });
+          await persistPredictionToCloud({ ...prediction, uid });
+        }
+      } catch (err) {
+        if (!isOfflineFirestoreError(err)) {
+          console.warn('Could not sync initial guest prediction:', err);
         }
       }
+    },
+    [persistPredictionToCloud, prediction],
+  );
+
+  // Complete any Google redirect sign-in on standalone mobile browsers
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const redirectCred = await getRedirectResult(auth, browserPopupRedirectResolver);
+        if (!cancelled && redirectCred?.user) {
+          setAuthModalOpen(false);
+          await ensureUserProfile(redirectCred.user);
+          await syncGuestDraftIfNew(redirectCred.user.uid);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        const code = getFirebaseErrorCode(err);
+        if (!code || code === 'auth/no-auth-event') return;
+        const domainCheck =
+          code === 'auth/unauthorized-domain' || code === 'auth/app-not-authorized'
+            ? await checkCurrentDomainAuthorized(true)
+            : { authorized: null };
+        setAuthError(mapFirebaseAuthError(err, language, domainCheck.authorized));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Run once on mount to capture any OAuth redirect return
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleGoogleSignIn = async (rethrowOnError = false) => {
+    setAuthError(null);
+    try {
+      const cred = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+      if (cred.user) {
+        setAuthModalOpen(false);
+        await ensureUserProfile(cred.user);
+        await syncGuestDraftIfNew(cred.user.uid);
+      }
     } catch (err) {
-      setAuthError(
-        err instanceof Error ? err.message : 'Google Sign-In could not be completed.',
-      );
-      throw err;
+      const code = getFirebaseErrorCode(err);
+
+      // Seamless fallback to full-page redirect on mobile browsers that block popups (only outside iframe)
+      if (
+        !isInsideIframe() &&
+        (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment')
+      ) {
+        try {
+          await signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver);
+          return;
+        } catch (redirectErr) {
+          err = redirectErr;
+        }
+      }
+
+      const latestCode = getFirebaseErrorCode(err);
+      const shouldCheckDomain =
+        latestCode === 'auth/unauthorized-domain' ||
+        latestCode === 'auth/app-not-authorized' ||
+        latestCode === 'auth/operation-not-allowed' ||
+        latestCode === 'auth/network-request-failed';
+      const domainCheck = shouldCheckDomain
+        ? await checkCurrentDomainAuthorized(true)
+        : { authorized: null };
+
+      const friendly = mapFirebaseAuthError(err, language, domainCheck.authorized);
+      if (rethrowOnError) {
+        throw new Error(friendly);
+      }
+      setAuthError(friendly);
     }
   };
 
   const handlePhoneVerified = async (uid: string, displayNameInput?: string) => {
     setAuthError(null);
-    try {
-      const currentUser = auth.currentUser;
-      const cleanName = displayNameInput?.trim().slice(0, 80);
-      const userRef = doc(db, 'users', uid);
-      const userSnap = await getDoc(userRef);
-
-      const phoneNumber = currentUser?.phoneNumber?.slice(0, 24);
-      const phoneSuffix = phoneNumber ? phoneNumber.slice(-4) : '';
-      const resolvedName =
-        cleanName ||
-        currentUser?.displayName ||
-        (phoneSuffix ? `UP Citizen ${phoneSuffix}` : 'UP Citizen');
-      const resolvedAlias = (
-        cleanName ||
-        currentUser?.displayName ||
-        (phoneSuffix ? `UP_${phoneSuffix}` : 'UP Forecaster')
-      ).slice(0, 40);
-
-      if (!userSnap.exists()) {
-        const newProfile: Record<string, unknown> = {
-          uid,
-          displayName: resolvedName,
-          publicAlias: resolvedAlias.length >= 2 ? resolvedAlias : 'UP Citizen',
-          authProvider: 'phone',
-          membershipTier: 'FREE',
-          isPro: false,
-          leaderboardOptIn: true,
-          consentAccepted: true,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-        if (phoneNumber) newProfile.phoneNumber = phoneNumber;
-        await setDoc(userRef, newProfile);
-        setUserProfile({
-          uid,
-          displayName: resolvedName,
-          publicAlias: resolvedAlias.length >= 2 ? resolvedAlias : 'UP Citizen',
-          phoneNumber,
-          authProvider: 'phone',
-          membershipTier: 'FREE',
-          leaderboardOptIn: true,
-          consentAccepted: true,
-        });
-      } else if (cleanName && cleanName.length >= 2) {
-        await updateDoc(userRef, {
-          displayName: cleanName,
-          publicAlias: cleanName.slice(0, 40),
-          updatedAt: serverTimestamp(),
-        });
-        setUserProfile((prev) =>
-          prev
-            ? {
-                ...prev,
-                displayName: cleanName,
-                publicAlias: cleanName.slice(0, 40),
-                phoneNumber: prev.phoneNumber || phoneNumber,
-                authProvider: 'phone',
-              }
-            : prev,
-        );
-      }
-
-      const predSnap = await getDoc(doc(db, 'user_predictions', uid));
-      if (!predSnap.exists()) {
-        await persistPredictionToCloud({ ...prediction, uid });
-      }
-    } catch (err) {
-      if (!isOfflineFirestoreError(err)) {
-        handleFirestoreError(err, OperationType.WRITE, `users/${uid}`);
-      }
+    const currentUser = auth.currentUser;
+    if (currentUser && currentUser.uid === uid) {
+      await ensureUserProfile(currentUser, displayNameInput);
     }
+    await syncGuestDraftIfNew(uid);
   };
 
   const scheduleDebouncedCloudSync = useCallback(
@@ -1386,8 +1444,16 @@ export default function App() {
       {/* Main Content Container */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 up-stage-3d">
         {authError && (
-          <div className="mb-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 p-3.5 text-xs font-semibold text-rose-700 dark:text-rose-300">
-            {authError}
+          <div className="mb-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-3.5 text-xs font-semibold text-rose-800 dark:text-rose-200 flex items-start justify-between gap-3">
+            <span className="leading-relaxed break-words">{authError}</span>
+            <button
+              type="button"
+              onClick={() => setAuthError(null)}
+              aria-label="Dismiss authentication message"
+              className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/70 hover:bg-rose-200 dark:hover:bg-rose-800 flex items-center justify-center shrink-0 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 
@@ -1554,7 +1620,7 @@ export default function App() {
         open={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         language={language}
-        onGoogleSignIn={handleGoogleSignIn}
+        onGoogleSignIn={() => handleGoogleSignIn(true)}
         onPhoneVerified={handlePhoneVerified}
       />
 

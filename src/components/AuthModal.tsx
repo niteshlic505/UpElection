@@ -1,10 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ConfirmationResult, updateProfile } from 'firebase/auth';
 import { motion } from 'motion/react';
 import {
+  AlertTriangle,
   ArrowLeft,
+  Check,
   CheckCircle2,
+  Copy,
+  ExternalLink,
   Gift,
   KeyRound,
   Phone,
@@ -14,7 +18,14 @@ import {
   User as UserIcon,
   X,
 } from 'lucide-react';
-import { RecaptchaVerifier, auth, signInWithPhoneNumber } from '../firebase';
+import {
+  RecaptchaVerifier,
+  auth,
+  checkCurrentDomainAuthorized,
+  getFirebaseErrorCode,
+  mapFirebaseAuthError,
+  signInWithPhoneNumber,
+} from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { AppLanguage } from '../types/election';
 import { TRANSLATIONS } from '../i18n/translations';
@@ -59,11 +70,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [resendTimer, setResendTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
+  const [domainStatus, setDomainStatus] = useState<{
+    authorized: boolean | null;
+    host: string;
+  }>({ authorized: null, host: '' });
+  const [copiedHost, setCopiedHost] = useState(false);
 
   const recaptchaMountRef = useRef<HTMLDivElement | null>(null);
   const verifierRef = useRef<RecaptchaVerifier | null>(null);
 
-  const clearVerifier = () => {
+  const clearVerifier = useCallback(() => {
     if (verifierRef.current) {
       try {
         verifierRef.current.clear();
@@ -78,18 +94,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setRecaptchaReady(false);
     setRecaptchaSolved(false);
     setRecaptchaLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (!open) {
       clearVerifier();
       setErrorMsg(null);
       setInfoMsg(null);
+      setCopiedHost(false);
       return;
     }
-  }, [open]);
 
-  // If user switches to visible reCAPTCHA mode, pre-render the interactive widget immediately
+    let cancelled = false;
+    void checkCurrentDomainAuthorized(true).then((res) => {
+      if (!cancelled) {
+        setDomainStatus({ authorized: res.authorized, host: res.host });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, clearVerifier]);
+
+  // If user switches to visible reCAPTCHA mode on the phone step, pre-render the interactive widget immediately
   useEffect(() => {
     if (!open || step !== 'phone' || recaptchaMode !== 'normal') return;
     let cancelled = false;
@@ -100,7 +127,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const mountTimer = setTimeout(async () => {
       if (cancelled || !recaptchaMountRef.current) return;
       clearVerifier();
-      if (cancelled) return;
+      if (cancelled || !recaptchaMountRef.current) return;
       setRecaptchaLoading(true);
 
       try {
@@ -160,8 +187,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     return () => {
       cancelled = true;
       clearTimeout(mountTimer);
+      clearVerifier();
     };
-  }, [open, step, recaptchaMode, language, recaptchaMountNonce]);
+  }, [open, step, recaptchaMode, language, recaptchaMountNonce, clearVerifier]);
 
   useEffect(() => {
     if (resendTimer <= 0) return;
@@ -181,105 +209,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     return digits;
   };
 
-  const getFirebaseErrorCode = (err: unknown): string =>
-    typeof err === 'object' && err !== null && 'code' in err
-      ? String((err as { code?: unknown }).code)
-      : '';
-
-  const checkCurrentDomainAuthorized = async (): Promise<boolean | null> => {
-    if (typeof window === 'undefined' || !firebaseConfig.apiKey) return null;
+  const handleCopyDomain = async () => {
+    if (!domainStatus.host || typeof navigator === 'undefined' || !navigator.clipboard) return;
     try {
-      const res = await fetch(
-        `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=${encodeURIComponent(firebaseConfig.apiKey)}`,
-      );
-      if (!res.ok) return null;
-      const data = (await res.json()) as { authorizedDomains?: string[] };
-      if (!Array.isArray(data.authorizedDomains)) return null;
-      const host = window.location.hostname.toLowerCase();
-      return data.authorizedDomains.some((d) => d.toLowerCase() === host);
+      await navigator.clipboard.writeText(domainStatus.host);
+      setCopiedHost(true);
+      setTimeout(() => setCopiedHost(false), 2000);
     } catch {
-      return null;
+      // ignore clipboard errors
     }
-  };
-
-  const mapFirebasePhoneError = (err: unknown, domainAuthorized: boolean | null = null): string => {
-    const code = getFirebaseErrorCode(err);
-    const msg = err instanceof Error ? err.message : String(err);
-    const currentHost =
-      typeof window !== 'undefined' ? window.location.hostname : 'this domain';
-
-    if (domainAuthorized === false) {
-      return language === 'hi'
-        ? `डोमेन "${currentHost}" Firebase Authorized Domains में जोड़ा नहीं गया है। Firebase Console (${firebaseConfig.projectId}) → Authentication → Settings → Authorized domains में "${currentHost}" जोड़ें, फिर पुनः प्रयास करें। [${code || 'unauthorized-domain'}]`
-        : `Domain "${currentHost}" is NOT added to Firebase Authorized Domains yet. Open Firebase Console (${firebaseConfig.projectId}) → Authentication → Settings → Authorized domains → Add domain "${currentHost}", then try again. [${code || 'unauthorized-domain'}]`;
-    }
-
-    if (code === 'auth/invalid-phone-number') {
-      return language === 'hi'
-        ? 'कृपया मान्य 10-अंकीय मोबाइल नंबर दर्ज करें।'
-        : 'Please enter a valid 10-digit mobile number.';
-    }
-    if (code === 'auth/invalid-verification-code') {
-      return language === 'hi'
-        ? 'गलत OTP कोड। कृपया SMS में प्राप्त 6-अंकीय कोड जाँचें।'
-        : 'Invalid OTP code. Please check the 6-digit code from your SMS.';
-    }
-    if (code === 'auth/code-expired') {
-      return language === 'hi'
-        ? 'OTP समय समाप्त हो गया। कृपया नया OTP मंगाएं।'
-        : 'OTP expired. Please request a fresh OTP.';
-    }
-    if (code === 'auth/too-many-requests') {
-      return language === 'hi'
-        ? 'बहुत अधिक प्रयास किए गए। कृपया कुछ मिनट बाद पुनः प्रयास करें।'
-        : 'Too many OTP attempts from this device/number. Please wait a few minutes and try again.';
-    }
-    if (code === 'auth/operation-not-allowed') {
-      return language === 'hi'
-        ? 'Firebase Console → Authentication → Sign-in method में Phone प्रदाता सक्रिय करें।'
-        : 'Phone sign-in is disabled in Firebase Console. Enable it under Authentication → Sign-in method → Phone.';
-    }
-    if (code === 'auth/billing-not-enabled') {
-      return language === 'hi'
-        ? 'लाइव SMS OTP के लिए Firebase प्रोजेक्ट पर Blaze प्लान या "Phone numbers for testing" जोड़ना आवश्यक है।'
-        : 'Firebase requires Blaze billing enabled for live SMS OTPs (or add test phone numbers under Authentication → Sign-in method → Phone → Phone numbers for testing).';
-    }
-    if (code === 'auth/quota-exceeded') {
-      return language === 'hi'
-        ? 'आज की SMS OTP सीमा पूरी हो गई है। कृपया बाद में प्रयास करें।'
-        : 'Daily SMS OTP quota exceeded on the Firebase project. Please try again later or use a Firebase test phone number.';
-    }
-    if (code === 'auth/unauthorized-domain' || code === 'auth/app-not-authorized') {
-      return language === 'hi'
-        ? `डोमेन "${currentHost}" को Firebase Console → Authentication → Settings → Authorized domains में जोड़ें। [${code}]`
-        : `Add "${currentHost}" to Firebase Console → Authentication → Settings → Authorized domains so SMS OTP can send. [${code}]`;
-    }
-    if (code === 'auth/invalid-app-credential' || code === 'auth/missing-app-credential') {
-      return language === 'hi'
-        ? `ऐप/डोमेन सत्यापन विफल रहा (${code})। सुनिश्चित करें कि "${currentHost}" Firebase Authorized Domains में जुड़ा है और नीचे सुरक्षा बॉक्स पूरा करें।`
-        : `App verification failed (${code}). Ensure "${currentHost}" is listed under Firebase Console → Authentication → Settings → Authorized domains, then complete the "I'm not a robot" check below.`;
-    }
-    if (
-      code === 'auth/captcha-check-failed' ||
-      code === 'auth/missing-client-identifier' ||
-      msg.toLowerCase().includes('recaptcha')
-    ) {
-      return language === 'hi'
-        ? `सुरक्षा जांच (reCAPTCHA) स्वतः सत्यापित नहीं हो सकी (${code || 'reCAPTCHA'})। कृपया नीचे "I'm not a robot" बॉक्स टिक करें और पुनः OTP भेजें।`
-        : `Security verification (reCAPTCHA) could not verify automatically (${code || 'reCAPTCHA'}). Please complete the "I'm not a robot" checkbox below and tap Send Verification OTP again.`;
-    }
-    if (code === 'auth/network-request-failed') {
-      return language === 'hi'
-        ? 'नेटवर्क कनेक्शन या Ad-blocker ने OTP अनुरोध को रोक दिया। कृपया इंटरनेट जाँचें या Ad-blocker बंद करें।'
-        : 'Network error or browser extension blocked Google Firebase verification. Disable ad blockers and check your connection.';
-    }
-    return code ? `${msg} [${code}]` : msg || 'Could not complete OTP authentication.';
   };
 
   const handleSendOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setErrorMsg(null);
     setInfoMsg(null);
+
+    if (domainStatus.authorized === false) {
+      setErrorMsg(mapFirebaseAuthError(new Error('auth/unauthorized-domain'), language, false));
+      return;
+    }
 
     const cleanDigits = normalizePhoneDigits(phoneDigits, countryCode);
     if (countryCode === '+91' && cleanDigits.length !== 10) {
@@ -295,6 +244,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         language === 'hi'
           ? 'कृपया मान्य मोबाइल नंबर दर्ज करें।'
           : 'Please enter a valid mobile number.',
+      );
+      return;
+    }
+
+    // If user triggers Resend OTP from the OTP screen while in visible checkbox mode, return to phone step cleanly
+    if (step === 'otp' && recaptchaMode === 'normal') {
+      clearVerifier();
+      setStep('phone');
+      setRecaptchaMountNonce((n) => n + 1);
+      setErrorMsg(
+        language === 'hi'
+          ? 'नया OTP भेजने के लिए कृपया नीचे "I\'m not a robot" बॉक्स पर पुनः टिक करें।'
+          : 'Please tick the "I\'m not a robot" checkbox below to send a fresh OTP.',
       );
       return;
     }
@@ -333,8 +295,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         const widgetNode = document.createElement('div');
         recaptchaMountRef.current.appendChild(widgetNode);
         verifier = new RecaptchaVerifier(auth, widgetNode, {
-          size: recaptchaMode,
+          size: 'invisible',
           'expired-callback': () => {
+            clearVerifier();
+          },
+          'error-callback': () => {
             clearVerifier();
           },
         });
@@ -348,6 +313,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setOtpDigits('');
       setResendTimer(30);
       setInfoMsg(t.otpSentTo(e164Phone));
+      if (recaptchaMode === 'invisible') {
+        clearVerifier();
+      }
     } catch (err) {
       const code = getFirebaseErrorCode(err);
       const isCaptchaIssue =
@@ -357,18 +325,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         code === 'auth/missing-client-identifier' ||
         (err instanceof Error && err.message.toLowerCase().includes('recaptcha'));
 
-      const domainAuthorized =
+      const domainCheck =
         isCaptchaIssue || code === 'auth/unauthorized-domain' || code === 'auth/app-not-authorized'
-          ? await checkCurrentDomainAuthorized()
-          : null;
+          ? await checkCurrentDomainAuthorized(true)
+          : { authorized: domainStatus.authorized, host: domainStatus.host };
+
+      if (domainCheck.authorized !== null) {
+        setDomainStatus({
+          authorized: domainCheck.authorized,
+          host: domainCheck.host || domainStatus.host,
+        });
+      }
 
       clearVerifier();
-      if (domainAuthorized !== false && isCaptchaIssue && recaptchaMode === 'invisible') {
+      if (domainCheck.authorized !== false && isCaptchaIssue && recaptchaMode === 'invisible') {
         setRecaptchaMode('normal');
+        if (step === 'otp') setStep('phone');
       } else if (recaptchaMode === 'normal') {
         setRecaptchaMountNonce((n) => n + 1);
       }
-      setErrorMsg(mapFirebasePhoneError(err, domainAuthorized));
+      setErrorMsg(mapFirebaseAuthError(err, language, domainCheck.authorized));
     } finally {
       setSendingOtp(false);
     }
@@ -408,7 +384,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setOtpDigits('');
       onClose();
     } catch (err) {
-      setErrorMsg(mapFirebasePhoneError(err));
+      setErrorMsg(mapFirebaseAuthError(err, language, domainStatus.authorized));
     } finally {
       setVerifyingOtp(false);
     }
@@ -421,7 +397,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       await onGoogleSignIn();
       onClose();
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Google Sign-In failed.');
+      const code = getFirebaseErrorCode(err);
+      let authorized = domainStatus.authorized;
+      if (code === 'auth/unauthorized-domain' || code === 'auth/app-not-authorized') {
+        const res = await checkCurrentDomainAuthorized(true);
+        authorized = res.authorized;
+        setDomainStatus({ authorized: res.authorized, host: res.host || domainStatus.host });
+      }
+      setErrorMsg(
+        code || authorized === false
+          ? mapFirebaseAuthError(err, language, authorized)
+          : err instanceof Error
+          ? err.message
+          : 'Google Sign-In failed.',
+      );
     } finally {
       setGoogleBusy(false);
     }
@@ -429,9 +418,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!open || typeof document === 'undefined') return null;
 
+  const isBusy = sendingOtp || verifyingOtp || googleBusy;
+  const firebaseAuthSettingsUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/authentication/settings`;
+
   return createPortal(
     <div
-      onClick={onClose}
+      onClick={() => {
+        if (!isBusy) onClose();
+      }}
       className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
     >
       <motion.div
@@ -487,6 +481,48 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Upfront Firebase Authorized Domain Alert (blocks both Google Sign-In & Phone OTP if host is not registered) */}
+          {domainStatus.authorized === false && domainStatus.host && (
+            <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 p-3.5 text-xs text-amber-950 dark:text-amber-100 space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="min-w-0 leading-relaxed">
+                  <div className="font-bold">
+                    {language === 'hi'
+                      ? `डोमेन "${domainStatus.host}" अभी Firebase में अधिकृत नहीं है`
+                      : `Domain "${domainStatus.host}" is not authorized in Firebase yet`}
+                  </div>
+                  <p className="text-[11px] opacity-90 mt-0.5">
+                    {language === 'hi'
+                      ? `Google लॉगिन और मोबाइल OTP चालू करने के लिए Firebase Console (${firebaseConfig.projectId}) → Authentication → Settings → Authorized domains में इसे जोड़ें:`
+                      : `Both Google Sign-In & Mobile OTP require adding this domain under Firebase Console (${firebaseConfig.projectId}) → Authentication → Settings → Authorized domains:`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => void handleCopyDomain()}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-200/80 dark:bg-amber-800/70 hover:bg-amber-300 dark:hover:bg-amber-700 font-mono-num font-bold text-[11px] cursor-pointer"
+                >
+                  {copiedHost ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedHost ? 'Copied!' : domainStatus.host}</span>
+                </button>
+                <a
+                  href={firebaseAuthSettingsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-amber-500 text-white dark:text-slate-950 font-bold text-[11px] hover:opacity-90"
+                >
+                  <span>
+                    {language === 'hi' ? 'Firebase Console खोलें' : 'Open Firebase Settings'}
+                  </span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          )}
 
           {/* Phone + OTP Section */}
           {step === 'phone' ? (
@@ -546,47 +582,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   {errorMsg}
                 </div>
               )}
-
-              {/* Visible reCAPTCHA mount container (NEVER display:none so challenge iframe & checkbox always render cleanly) */}
-              <div
-                className={
-                  recaptchaMode === 'normal'
-                    ? 'rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-900/60 p-3 flex flex-col items-center justify-center gap-2 min-h-[92px]'
-                    : 'flex justify-center overflow-x-auto min-h-[2px]'
-                }
-              >
-                {recaptchaMode === 'normal' && recaptchaLoading && (
-                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-300 flex items-center gap-2">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>
-                      {language === 'hi'
-                        ? 'सुरक्षा जांच ("I\'m not a robot") लोड हो रहा है...'
-                        : 'Loading "I\'m not a robot" security check...'}
-                    </span>
-                  </div>
-                )}
-                <div
-                  ref={recaptchaMountRef}
-                  className="flex justify-center overflow-x-auto max-w-full"
-                />
-                {recaptchaMode === 'normal' && !recaptchaLoading && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setErrorMsg(null);
-                      setRecaptchaMountNonce((n) => n + 1);
-                    }}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-400 cursor-pointer"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    <span>
-                      {language === 'hi'
-                        ? 'सुरक्षा बॉक्स पुनः लोड करें'
-                        : 'Reload security check'}
-                    </span>
-                  </button>
-                )}
-              </div>
 
               <button
                 type="submit"
@@ -664,6 +659,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
+                    clearVerifier();
                     setStep('phone');
                     setErrorMsg(null);
                     setInfoMsg(null);
@@ -688,6 +684,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             </form>
           )}
+
+          {/* Persistent reCAPTCHA mount container (stays mounted across BOTH phone & otp steps so Resend OTP never loses the node) */}
+          <div
+            className={
+              step === 'phone' && recaptchaMode === 'normal'
+                ? 'rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-900/60 p-3 flex flex-col items-center justify-center gap-2 min-h-[92px]'
+                : 'flex justify-center overflow-x-auto min-h-[1px]'
+            }
+          >
+            {step === 'phone' && recaptchaMode === 'normal' && recaptchaLoading && (
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-300 flex items-center gap-2">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>
+                  {language === 'hi'
+                    ? 'सुरक्षा जांच ("I\'m not a robot") लोड हो रहा है...'
+                    : 'Loading "I\'m not a robot" security check...'}
+                </span>
+              </div>
+            )}
+            <div
+              ref={recaptchaMountRef}
+              className="flex justify-center overflow-x-auto max-w-full"
+            />
+            {step === 'phone' && recaptchaMode === 'normal' && !recaptchaLoading && (
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMsg(null);
+                  setRecaptchaMountNonce((n) => n + 1);
+                }}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-400 cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>
+                  {language === 'hi'
+                    ? 'सुरक्षा बॉक्स पुनः लोड करें'
+                    : 'Reload security check'}
+                </span>
+              </button>
+            )}
+          </div>
 
           {/* Divider */}
           <div className="relative flex items-center py-0.5">
