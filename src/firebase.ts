@@ -63,6 +63,16 @@ export function getFirebaseErrorCode(err: unknown): string {
   return match ? match[1].toLowerCase() : '';
 }
 
+function isHostnameAuthorized(host: string, authorizedDomains: string[]): boolean {
+  const cleanHost = host.toLowerCase().trim();
+  if (!cleanHost) return false;
+  return authorizedDomains.some((raw) => {
+    const dom = raw.toLowerCase().trim();
+    if (!dom) return false;
+    return cleanHost === dom || cleanHost.endsWith(`.${dom}`);
+  });
+}
+
 let cachedAuthorizedDomains: string[] | null = null;
 
 export async function checkCurrentDomainAuthorized(
@@ -74,7 +84,7 @@ export async function checkCurrentDomainAuthorized(
   }
   if (!forceRefresh && cachedAuthorizedDomains) {
     return {
-      authorized: cachedAuthorizedDomains.some((d) => d.toLowerCase() === host),
+      authorized: isHostnameAuthorized(host, cachedAuthorizedDomains),
       host,
       authorizedDomains: cachedAuthorizedDomains,
     };
@@ -92,7 +102,7 @@ export async function checkCurrentDomainAuthorized(
     }
     cachedAuthorizedDomains = data.authorizedDomains;
     return {
-      authorized: data.authorizedDomains.some((d) => d.toLowerCase() === host),
+      authorized: isHostnameAuthorized(host, data.authorizedDomains),
       host,
       authorizedDomains: data.authorizedDomains,
     };

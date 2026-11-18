@@ -75,6 +75,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     host: string;
   }>({ authorized: null, host: '' });
   const [copiedHost, setCopiedHost] = useState(false);
+  const [domainRechecking, setDomainRechecking] = useState(false);
 
   const recaptchaMountRef = useRef<HTMLDivElement | null>(null);
   const verifierRef = useRef<RecaptchaVerifier | null>(null);
@@ -220,14 +221,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  const handleRecheckDomain = async () => {
+    setDomainRechecking(true);
+    try {
+      const res = await checkCurrentDomainAuthorized(true);
+      setDomainStatus({ authorized: res.authorized, host: res.host || domainStatus.host });
+      if (res.authorized === true) {
+        setErrorMsg(null);
+        setInfoMsg(
+          language === 'hi'
+            ? `"${res.host}" अब अधिकृत है! अब आप OTP या Google से लॉगिन कर सकते हैं।`
+            : `"${res.host}" is now authorized! You can sign in with Mobile OTP or Google.`,
+        );
+      }
+    } finally {
+      setDomainRechecking(false);
+    }
+  };
+
   const handleSendOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setErrorMsg(null);
     setInfoMsg(null);
 
     if (domainStatus.authorized === false) {
-      setErrorMsg(mapFirebaseAuthError(new Error('auth/unauthorized-domain'), language, false));
-      return;
+      const fresh = await checkCurrentDomainAuthorized(true);
+      setDomainStatus({ authorized: fresh.authorized, host: fresh.host || domainStatus.host });
+      if (fresh.authorized === false) {
+        setErrorMsg(mapFirebaseAuthError(new Error('auth/unauthorized-domain'), language, false));
+        return;
+      }
     }
 
     const cleanDigits = normalizePhoneDigits(phoneDigits, countryCode);
@@ -520,6 +543,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
+                <button
+                  type="button"
+                  disabled={domainRechecking}
+                  onClick={() => void handleRecheckDomain()}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-amber-400/70 text-amber-900 dark:text-amber-200 font-bold text-[11px] hover:bg-white cursor-pointer disabled:opacity-60"
+                >
+                  <RefreshCw className={`w-3 h-3 ${domainRechecking ? 'animate-spin' : ''}`} />
+                  <span>{language === 'hi' ? 'पुनः जांचें' : 'Re-check'}</span>
+                </button>
               </div>
             </div>
           )}
