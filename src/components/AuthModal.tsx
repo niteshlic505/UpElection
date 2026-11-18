@@ -514,12 +514,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <div className="font-bold">
                     {language === 'hi'
                       ? `डोमेन "${domainStatus.host}" अभी Firebase में अधिकृत नहीं है`
-                      : `Domain "${domainStatus.host}" is not authorized in Firebase yet`}
+                      : `Action Needed in Firebase Console (${firebaseConfig.projectId})`}
                   </div>
                   <p className="text-[11px] opacity-90 mt-0.5">
                     {language === 'hi'
-                      ? `Google लॉगिन और मोबाइल OTP चालू करने के लिए Firebase Console (${firebaseConfig.projectId}) → Authentication → Settings → Authorized domains में इसे जोड़ें:`
-                      : `Both Google Sign-In & Mobile OTP require adding this domain under Firebase Console (${firebaseConfig.projectId}) → Authentication → Settings → Authorized domains:`}
+                      ? `Google लॉगिन और मोबाइल OTP चालू करने के लिए Firebase Console (${firebaseConfig.projectId} · #${firebaseConfig.messagingSenderId}) → Authentication → Settings → Authorized domains में सिर्फ "${domainStatus.host}" जोड़ें (https:// न लगाएं):`
+                      : `Add "${domainStatus.host}" (without https://) under Project "${firebaseConfig.projectId}" (#${firebaseConfig.messagingSenderId}) → Authentication → Settings → Authorized domains:`}
                   </p>
                 </div>
               </div>

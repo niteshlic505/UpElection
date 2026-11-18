@@ -1283,15 +1283,15 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-[#FAF6EE] dark:bg-[#050B1A] up-desi-jaali text-slate-900 dark:text-slate-100 pb-20 md:pb-8">
       {/* Top Corporate Navy Material 3 App Bar with Saffron-White-Green Tiranga Accent */}
       <header className="sticky top-0 z-40 bg-gradient-to-r from-[#060E24]/95 via-[#0C1B44]/95 to-[#081330]/95 backdrop-blur-md text-white border-b border-cyan-400/15 shadow-[0_8px_30px_-10px_rgba(37,99,235,0.52)]">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2 sm:gap-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2 sm:gap-3 lg:gap-5 overflow-hidden">
           {/* Zone 1: Brand / Back */}
-          <div className="flex items-center gap-2 min-w-0 shrink-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1 md:flex-none shrink">
             {activeTab !== 'home' && (
               <button
                 type="button"
                 onClick={() => navigateTo('home')}
                 aria-label="Back to Home"
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer md:hidden"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer md:hidden shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
@@ -1299,21 +1299,21 @@ export default function App() {
             <button
               type="button"
               onClick={() => navigateTo('home')}
-              className="flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
+              className="flex items-center gap-2 cursor-pointer whitespace-nowrap min-w-0"
             >
-              <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF9933] via-[#F59E0B] to-[#D97706] text-slate-950 font-display font-extrabold text-xs flex items-center justify-center shadow-sm ring-1 ring-amber-200/70">
+              <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF9933] via-[#F59E0B] to-[#D97706] text-slate-950 font-display font-extrabold text-xs flex items-center justify-center shadow-sm ring-1 ring-amber-200/70 shrink-0">
                 UP
               </span>
-              <span className="font-display font-bold text-sm sm:text-lg tracking-tight flex items-center gap-1.5">
+              <span className="font-display font-bold text-sm sm:text-base lg:text-lg tracking-tight flex items-center gap-1.5 min-w-0 truncate">
                 {activeTab === 'home' ? (
-                  <span>
+                  <span className="truncate">
                     UP <span className="text-[#FF9933]">Mandate</span>
                   </span>
                 ) : (
-                  <span className="md:hidden truncate max-w-[140px] inline-block align-bottom">{headerTitle}</span>
+                  <span className="md:hidden truncate">{headerTitle}</span>
                 )}
                 {activeTab !== 'home' && (
-                  <span className="hidden md:inline-flex items-center">
+                  <span className="hidden md:inline-flex items-center truncate">
                     <span>
                       UP <span className="text-[#FF9933]">Mandate</span>
                     </span>
@@ -1324,7 +1324,7 @@ export default function App() {
           </div>
 
           {/* Zone 2: Desktop Single-Line Nav Links */}
-          <nav className="hidden md:flex items-center gap-5 lg:gap-6 text-sm font-medium text-blue-100/80">
+          <nav className="hidden md:flex items-center justify-center min-w-0 flex-1 gap-3 lg:gap-5 xl:gap-6 text-xs lg:text-sm font-medium text-blue-100/80 overflow-x-auto">
             {[
               { id: 'home', label: t.nav.home },
               { id: 'parties', label: t.nav.parties },
@@ -1378,18 +1378,18 @@ export default function App() {
             )}
           </nav>
 
-          {/* Zone 3: Language Toggle (EN / हिं) + Legal Info + Profile / Premium Action */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Zone 3: Language Toggle (EN / हिं) + Legal Info + Profile / Account Action */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-1.5 sm:pr-2">
             <div
               role="group"
               aria-label="Language Switcher"
-              className="h-9 p-0.5 rounded-xl bg-white/10 border border-white/15 flex items-center"
+              className="h-8 sm:h-9 p-0.5 rounded-xl bg-white/10 border border-white/15 flex items-center"
             >
-              <Languages className="w-3.5 h-3.5 text-blue-200 ml-1.5 mr-1 hidden sm:block" />
+              <Languages className="w-3.5 h-3.5 text-blue-200 ml-1.5 mr-1 hidden xl:block" />
               <button
                 type="button"
                 onClick={() => setLanguage('en')}
-                className={`h-7.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                className={`h-7 px-1.5 sm:px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                   language === 'en'
                     ? 'bg-[#F59E0B] text-slate-950 shadow-xs'
                     : 'text-blue-100/80 hover:text-white'
@@ -1400,7 +1400,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setLanguage('hi')}
-                className={`h-7.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                className={`h-7 px-1.5 sm:px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                   language === 'hi'
                     ? 'bg-[#F59E0B] text-slate-950 shadow-xs'
                     : 'text-blue-100/80 hover:text-white'
@@ -1414,7 +1414,7 @@ export default function App() {
               type="button"
               onClick={() => setLegalModalOpen(true)}
               aria-label="Legal Compliance & Scoring Rules"
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-[#F59E0B] flex items-center justify-center transition-colors cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 text-[#F59E0B] flex items-center justify-center transition-colors cursor-pointer shrink-0"
             >
               <Info className="w-4 h-4" />
             </button>
@@ -1423,14 +1423,14 @@ export default function App() {
               type="button"
               onClick={() => (firebaseUser ? setProfileModalOpen(true) : setAuthModalOpen(true))}
               aria-label="Account, Mobile OTP and Settings"
-              className="h-9 px-3 rounded-full bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-[#E65100] hover:brightness-105 text-slate-950 flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 up-md3-ripple up-gold-rim"
+              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-full bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-[#E65100] hover:brightness-105 text-slate-950 flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 up-md3-ripple up-gold-rim"
             >
               {firebaseUser ? (
                 <UserIcon className="w-4 h-4 shrink-0" />
               ) : (
                 <Smartphone className="w-4 h-4 shrink-0" />
               )}
-              <span className="hidden sm:inline max-w-[140px] truncate">
+              <span className="hidden sm:inline md:hidden lg:inline max-w-[110px] truncate">
                 {firebaseUser
                   ? userProfile?.publicAlias || t.auth.account
                   : t.auth.signIn}
@@ -1445,7 +1445,23 @@ export default function App() {
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 up-stage-3d">
         {authError && (
           <div className="mb-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-3.5 text-xs font-semibold text-rose-800 dark:text-rose-200 flex items-start justify-between gap-3">
-            <span className="leading-relaxed break-words">{authError}</span>
+            <div className="space-y-2 min-w-0">
+              <div className="leading-relaxed break-words">{authError}</div>
+              {authError.includes('unauthorized-domain') && (
+                <a
+                  href="https://console.firebase.google.com/project/lic-call-centre/authentication/settings"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-amber-500 text-white dark:text-slate-950 font-bold text-[11px] hover:opacity-90"
+                >
+                  <span>
+                    {language === 'hi'
+                      ? 'Firebase Console → Authorized Domains खोलें'
+                      : 'Open Firebase Authorized Domains →'}
+                  </span>
+                </a>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => setAuthError(null)}
