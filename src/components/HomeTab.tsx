@@ -26,6 +26,7 @@ import {
 } from '../types/election';
 import { TOTAL_UP_SEATS, getBandByStart, getBandDisplaySeats } from '../data/upParties';
 import { TRANSLATIONS } from '../i18n/translations';
+import upVidhanTwilightImg from '../assets/images/up_vidhan_twilight_1794969822354.jpg';
 
 interface HomeTabProps {
   userProfile: UserProfileData | null;
@@ -125,11 +126,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <p className="text-sm md:text-base text-blue-100 leading-relaxed max-w-2xl">
                 {t.home.splashDesc}
               </p>
-              <div className="flex flex-wrap items-center gap-3 pt-1">
+              <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 pt-1">
                 <button
                   type="button"
                   onClick={onOpenAuthModal}
-                  className="inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-amber-500 text-slate-950 font-display font-extrabold text-sm hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg up-gold-rim up-md3-ripple cursor-pointer whitespace-nowrap"
+                  className="inline-flex items-center justify-center gap-2.5 px-5 py-3 min-h-[44px] rounded-xl bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-amber-500 text-slate-950 font-display font-extrabold text-sm hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg up-gold-rim up-md3-ripple cursor-pointer whitespace-nowrap"
                 >
                   <Smartphone className="w-4 h-4 shrink-0" />
                   <span>{t.auth.continuePhone}</span>
@@ -138,7 +139,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 <button
                   type="button"
                   onClick={onGoogleSignIn}
-                  className="inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-blue-50 active:scale-[0.99] transition-all shadow-lg up-md3-ripple cursor-pointer whitespace-nowrap"
+                  className="inline-flex items-center justify-center gap-2.5 px-5 py-3 min-h-[44px] rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-blue-50 active:scale-[0.99] transition-all shadow-lg up-md3-ripple cursor-pointer whitespace-nowrap"
                 >
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path
@@ -164,7 +165,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 <button
                   type="button"
                   onClick={onOpenLegal}
-                  className="px-4 py-3 rounded-xl border border-white/25 text-xs font-medium text-blue-100 hover:bg-white/10 transition-colors up-md3-ripple cursor-pointer whitespace-nowrap"
+                  className="px-4 py-3 min-h-[44px] rounded-xl border border-white/25 text-xs font-medium text-blue-100 hover:bg-white/10 transition-colors up-md3-ripple cursor-pointer whitespace-nowrap text-center"
                 >
                   {t.home.termsPrivacy}
                 </button>
@@ -190,8 +191,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       {/* Top Desktop Grid: User Profile + 3 KPIs */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 up-stage-3d">
         {/* User Identity & Cloud Sync Card */}
-        <div className="lg:col-span-5 rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-cyan-400/20 p-4 sm:p-5 flex items-center justify-between gap-4 up-md3-elev-1 up-card-3d">
-          <div className="flex items-center gap-3.5 min-w-0">
+        <div className="lg:col-span-5 rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-cyan-400/20 p-4 sm:p-5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4 up-md3-elev-1 up-card-3d">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {userProfile?.photoURL ? (
               <img
                 src={userProfile.photoURL}
@@ -234,39 +235,39 @@ export const HomeTab: React.FC<HomeTabProps> = ({
         </div>
 
         {/* 3 KPI Stat Cards */}
-        <div className="lg:col-span-7 grid grid-cols-3 gap-3 sm:gap-4">
-          <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
-            <div className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-2">
+        <div className="lg:col-span-7 grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-amber-500/25 dark:border-slate-800 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
+            <div className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1.5 sm:mb-2">
               <Trophy className="w-4 h-4" />
             </div>
-            <div className="font-display font-extrabold text-lg sm:text-2xl text-slate-900 dark:text-white font-mono-num">
+            <div className="font-display font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white font-mono-num">
               {civicPoints}
             </div>
-            <div className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+            <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-tight">
               {t.home.civicPoints}
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-emerald-500/25 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
-            <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
+          <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-emerald-500/25 dark:border-slate-800 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
+            <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1.5 sm:mb-2">
               <CheckCircle2 className="w-4 h-4" />
             </div>
-            <div className="font-display font-extrabold text-lg sm:text-2xl text-slate-900 dark:text-white font-mono-num">
+            <div className="font-display font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white font-mono-num">
               {overallPercent}%
             </div>
-            <div className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+            <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-tight">
               {t.home.completed}
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-cyan-500/25 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
-            <div className="w-9 h-9 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-2">
+          <div className="rounded-2xl bg-white/90 dark:bg-[#0E1A36]/90 backdrop-blur-md border border-cyan-500/25 dark:border-slate-800 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
+            <div className="w-9 h-9 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-1.5 sm:mb-2">
               <Clock className="w-4 h-4" />
             </div>
-            <div className="font-display font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white font-mono-num whitespace-nowrap">
+            <div className="font-display font-extrabold text-sm sm:text-2xl text-slate-900 dark:text-white font-mono-num whitespace-nowrap">
               {electionConfig.isLocked ? t.home.locked : countdownText}
             </div>
-            <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
               {t.home.untilLock}
             </div>
           </div>
@@ -344,7 +345,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
         >
           {/* UP Vidhan Bhawan & Rumi Darwaza Twilight Backdrop */}
           <img
-            src="/src/assets/images/up_vidhan_twilight_1794969822354.jpg"
+            src={upVidhanTwilightImg}
             alt="Uttar Pradesh Vidhan Bhawan and Rumi Darwaza at Twilight"
             referrerPolicy="no-referrer"
             className="absolute inset-0 w-full h-full object-cover object-center opacity-75 pointer-events-none select-none"

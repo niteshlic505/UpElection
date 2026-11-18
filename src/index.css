@@ -34,6 +34,10 @@
     --md-sys-outline-variant: rgba(148, 163, 184, 0.16);
   }
 
+  html, body {
+    overflow-x: clip;
+  }
+
   body {
     font-family: var(--font-body);
     background-color: var(--md-sys-surface);
@@ -133,8 +137,10 @@
     border-color 200ms ease;
 }
 
-.up-card-3d:hover {
-  transform: perspective(1100px) translateY(-4px) rotateX(2.5deg) translateZ(6px);
+@media (hover: hover) and (pointer: fine) {
+  .up-card-3d:hover {
+    transform: perspective(1100px) translateY(-4px) rotateX(2.5deg) translateZ(6px);
+  }
 }
 
 .up-card-3d:active {

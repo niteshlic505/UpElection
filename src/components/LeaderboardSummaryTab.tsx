@@ -235,7 +235,7 @@ export const LeaderboardSummaryTab: React.FC<LeaderboardSummaryTabProps> = ({
         <div className="space-y-5">
           {/* 3D Neon Podium Navy Card */}
           <div className="rounded-3xl text-white p-5 sm:p-7 shadow-xl bg-gradient-to-br from-[#08122C] via-[#0F2250] to-[#132C66] up-neon-rim up-neon-edge">
-            <div className="flex items-center justify-between gap-3 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
               <div>
                 <div className="flex items-center gap-2">
                   <Crown className="w-5 h-5 text-[#F59E0B]" />
@@ -270,7 +270,7 @@ export const LeaderboardSummaryTab: React.FC<LeaderboardSummaryTabProps> = ({
                 {t.emptyOpenBoard}
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-3 items-end up-stage-3d">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 items-end up-stage-3d">
                 {/* #2 */}
                 <motion.div
                   initial={{ opacity: 0, y: 16, rotateX: -8 }}

@@ -10,8 +10,6 @@ import {
   getDocFromServer,
   getFirestore,
   initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
@@ -22,11 +20,7 @@ function initDb() {
     return initializeFirestore(
       app,
       {
-        experimentalForceLongPolling: true,
         ignoreUndefinedProperties: true,
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-        }),
       },
       firebaseConfig.firestoreDatabaseId,
     );
@@ -68,8 +62,13 @@ export interface FirestoreErrorInfo {
 }
 
 export function isOfflineFirestoreError(error: unknown): boolean {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String((error as { code?: unknown }).code).toLowerCase()
+      : '';
   const msg = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
   return (
+    code === 'unavailable' ||
     msg.includes('client is offline') ||
     msg.includes('could not reach cloud firestore backend') ||
     msg.includes('unavailable')
@@ -102,29 +101,40 @@ export function handleFirestoreError(
   throw new Error(JSON.stringify(errInfo));
 }
 
+export function handleRealtimeListenerError(
+  error: unknown,
+  operationType: OperationType,
+  path: string | null,
+): void {
+  if (isOfflineFirestoreError(error)) {
+    console.warn(`Firestore listener temporarily unavailable for ${path || 'query'}; waiting for reconnect.`);
+    return;
+  }
+  handleFirestoreError(error, operationType, path);
+}
+
+let connectionProbePromise: Promise<boolean> | null = null;
+
 export async function testConnection(): Promise<boolean> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return false;
   }
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    return true;
-  } catch (error) {
-    if (isOfflineFirestoreError(error)) {
-      // Retry once after brief delay in case connection was warming up
-      await new Promise((r) => setTimeout(r, 1500));
+  if (!connectionProbePromise) {
+    connectionProbePromise = (async () => {
       try {
         await getDocFromServer(doc(db, 'test', 'connection'));
         return true;
-      } catch (retryError) {
-        if (isOfflineFirestoreError(retryError)) {
-          console.warn('Firestore operating in offline cache mode until backend responds.');
+      } catch (error) {
+        if (isOfflineFirestoreError(error)) {
+          console.warn('Firestore backend temporarily unreachable; operating in offline mode until connected.');
           return false;
         }
+        // A permission-denied or not-found response confirms the backend is reachable
+        return true;
       }
-    }
-    return true;
+    })();
   }
+  return connectionProbePromise;
 }
 
 export const BOOTSTRAPPED_ADMIN_EMAIL = 'niteshm505@gmail.com';

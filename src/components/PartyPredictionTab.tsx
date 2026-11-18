@@ -170,7 +170,7 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
     <div className="space-y-5">
       {/* Year Toggle Bar (2007 | 2012 | 2017 | 2022 | 2027 Predict) */}
       <div className="rounded-2xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-2 up-md3-elev-1">
-        <div className="grid grid-cols-5 gap-1.5">
+        <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
           {YEARS.map((yr) => {
             const active = selectedYear === yr;
             const isPredict = yr === '2027';
@@ -179,7 +179,7 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                 key={yr}
                 type="button"
                 onClick={() => setSelectedYear(yr)}
-                className={`py-2.5 px-2 rounded-xl text-center transition-all up-md3-ripple cursor-pointer ${
+                className={`py-2.5 px-1 sm:px-2 rounded-xl text-center transition-all up-md3-ripple cursor-pointer ${
                   active
                     ? 'bg-[#0A1633] dark:bg-[#1D4ED8] text-white up-neon-rim'
                     : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70'
@@ -204,8 +204,8 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
       {/* Main Layout: Chart Card + Party Allocation Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left: Doughnut Chart & Breakdown */}
-        <div className="lg:col-span-5 rounded-3xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 up-md3-elev-1">
-          <div className="flex items-start justify-between gap-3 mb-5">
+        <div className="lg:col-span-5 rounded-3xl bg-white dark:bg-[#0F1B35] border border-slate-200/80 dark:border-slate-800 p-4 sm:p-6 up-md3-elev-1">
+          <div className="flex flex-wrap items-start justify-between gap-2 sm:gap-3 mb-5">
             <div>
               <h2 className="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight">
                 {isHistorical ? t.histTitle(selectedYear) : t.predictTitle}

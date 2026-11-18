@@ -42,6 +42,7 @@ import {
   db,
   googleProvider,
   handleFirestoreError,
+  handleRealtimeListenerError,
   isOfflineFirestoreError,
   testConnection,
 } from './firebase';
@@ -366,7 +367,7 @@ export default function App() {
           });
         }
       },
-      (error) => handleFirestoreError(error, OperationType.GET, `user_predictions/${uid}`),
+      (error) => handleRealtimeListenerError(error, OperationType.GET, `user_predictions/${uid}`),
     );
 
     // 2. Public opted-in leaderboard
@@ -377,7 +378,7 @@ export default function App() {
         const list = snap.docs.map((d) => d.data() as LeaderboardEntry);
         setLeaderboard(list);
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'leaderboard'),
+      (error) => handleRealtimeListenerError(error, OperationType.LIST, 'leaderboard'),
     );
 
     // 3. Election config
@@ -388,7 +389,7 @@ export default function App() {
           setElectionConfig(snap.data() as ElectionConfigData);
         }
       },
-      (error) => handleFirestoreError(error, OperationType.GET, 'election_config/global'),
+      (error) => handleRealtimeListenerError(error, OperationType.GET, 'election_config/global'),
     );
 
     // 4. Parties catalog (merge built-in UP parties with any Firestore Admin overrides)
@@ -409,7 +410,7 @@ export default function App() {
         });
         setParties(Array.from(mergedMap.values()).sort((a, b) => a.order - b.order));
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'parties'),
+      (error) => handleRealtimeListenerError(error, OperationType.LIST, 'parties'),
     );
 
     // 5. Constituency CSV overrides
@@ -438,7 +439,7 @@ export default function App() {
         });
         setConstituencyOverrides(map);
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'constituencies'),
+      (error) => handleRealtimeListenerError(error, OperationType.LIST, 'constituencies'),
     );
 
     // 6. Managed 2027 candidates
@@ -447,7 +448,7 @@ export default function App() {
       (snap) => {
         setCandidates(snap.docs.map((d) => d.data() as CandidateRecord));
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'candidates'),
+      (error) => handleRealtimeListenerError(error, OperationType.LIST, 'candidates'),
     );
 
     // 7. Official ECI results
@@ -461,7 +462,7 @@ export default function App() {
         });
         setOfficialResults(map);
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'official_results'),
+      (error) => handleRealtimeListenerError(error, OperationType.LIST, 'official_results'),
     );
 
     return () => {
@@ -492,21 +493,21 @@ export default function App() {
         }));
         setAuditLogs(list.reverse());
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'audit_logs'),
+      (error) => handleRealtimeListenerError(error, OperationType.LIST, 'audit_logs'),
     );
     const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snap) => {
         setAllUsers(snap.docs.map((d) => d.data() as UserProfileData));
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'users'),
+      (error) => handleRealtimeListenerError(error, OperationType.LIST, 'users'),
     );
     const unsubPreds = onSnapshot(
       collection(db, 'user_predictions'),
       (snap) => {
         setAllUserPredictions(snap.docs.map((d) => d.data() as UserPredictionData));
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'user_predictions'),
+      (error) => handleRealtimeListenerError(error, OperationType.LIST, 'user_predictions'),
     );
     return () => {
       unsubLogs();

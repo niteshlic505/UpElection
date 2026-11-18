@@ -46,6 +46,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [displayName, setDisplayName] = useState('');
   const [otpDigits, setOtpDigits] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [recaptchaMode, setRecaptchaMode] = useState<'invisible' | 'normal'>('invisible');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
@@ -57,34 +58,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const recaptchaMountRef = useRef<HTMLDivElement | null>(null);
   const verifierRef = useRef<RecaptchaVerifier | null>(null);
 
-  useEffect(() => {
-    if (!open) {
-      if (verifierRef.current) {
-        try {
-          verifierRef.current.clear();
-        } catch {
-          // ignore cleanup failure
-        }
-        verifierRef.current = null;
-      }
-      setErrorMsg(null);
-      setInfoMsg(null);
-      return;
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (resendTimer <= 0) return;
-    const id = setTimeout(() => setResendTimer((v) => Math.max(0, v - 1)), 1000);
-    return () => clearTimeout(id);
-  }, [resendTimer]);
-
   const clearVerifier = () => {
     if (verifierRef.current) {
       try {
         verifierRef.current.clear();
       } catch {
-        // ignore
+        // ignore cleanup failure
       }
       verifierRef.current = null;
     }
@@ -93,12 +72,88 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (!open) {
+      clearVerifier();
+      setErrorMsg(null);
+      setInfoMsg(null);
+      return;
+    }
+  }, [open]);
+
+  // If user switches to visible reCAPTCHA mode, pre-render the interactive widget immediately
+  useEffect(() => {
+    if (!open || step !== 'phone' || recaptchaMode !== 'normal') return;
+    let cancelled = false;
+    const mountTimer = setTimeout(() => {
+      if (cancelled || !recaptchaMountRef.current) return;
+      clearVerifier();
+      try {
+        const widgetNode = document.createElement('div');
+        recaptchaMountRef.current.appendChild(widgetNode);
+        const verifier = new RecaptchaVerifier(auth, widgetNode, {
+          size: 'normal',
+          callback: () => {
+            setErrorMsg(null);
+          },
+          'expired-callback': () => {
+            setErrorMsg(
+              language === 'hi'
+                ? 'सुरक्षा सत्यापन समय समाप्त हो गया। कृपया बॉक्स पर पुनः टिक करें।'
+                : 'Security check expired. Please tick the box again.',
+            );
+          },
+          'error-callback': () => {
+            setErrorMsg(
+              language === 'hi'
+                ? 'reCAPTCHA लोड नहीं हो सका। कृपया Ad-blocker बंद करके पुनः प्रयास करें।'
+                : 'Could not load reCAPTCHA. Please disable ad/tracker blockers and retry.',
+            );
+          },
+        });
+        verifierRef.current = verifier;
+        void verifier.render().catch(() => {
+          // handled on submit if render fails
+        });
+      } catch {
+        // handled on submit
+      }
+    }, 50);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(mountTimer);
+    };
+  }, [open, step, recaptchaMode, language]);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const id = setTimeout(() => setResendTimer((v) => Math.max(0, v - 1)), 1000);
+    return () => clearTimeout(id);
+  }, [resendTimer]);
+
+  const normalizePhoneDigits = (raw: string, code: string): string => {
+    let digits = raw.replace(/\D/g, '');
+    if (code === '+91') {
+      if (digits.length === 12 && digits.startsWith('91')) {
+        digits = digits.slice(2);
+      } else if (digits.length === 11 && digits.startsWith('0')) {
+        digits = digits.slice(1);
+      }
+    }
+    return digits;
+  };
+
+  const getFirebaseErrorCode = (err: unknown): string =>
+    typeof err === 'object' && err !== null && 'code' in err
+      ? String((err as { code?: unknown }).code)
+      : '';
+
   const mapFirebasePhoneError = (err: unknown): string => {
-    const code =
-      typeof err === 'object' && err !== null && 'code' in err
-        ? String((err as { code?: unknown }).code)
-        : '';
+    const code = getFirebaseErrorCode(err);
     const msg = err instanceof Error ? err.message : String(err);
+    const currentHost =
+      typeof window !== 'undefined' ? window.location.hostname : 'this domain';
 
     if (code === 'auth/invalid-phone-number') {
       return language === 'hi'
@@ -118,17 +173,43 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (code === 'auth/too-many-requests') {
       return language === 'hi'
         ? 'बहुत अधिक प्रयास किए गए। कृपया कुछ मिनट बाद पुनः प्रयास करें।'
-        : 'Too many OTP attempts. Please wait a few minutes and try again.';
+        : 'Too many OTP attempts from this device/number. Please wait a few minutes and try again.';
     }
     if (code === 'auth/operation-not-allowed') {
       return language === 'hi'
         ? 'Firebase Console -> Authentication -> Sign-in method में Phone प्रदाता सक्रिय करें।'
-        : 'Phone sign-in is not enabled yet in Firebase Console (Authentication -> Sign-in method -> Enable Phone).';
+        : 'Phone sign-in is disabled in Firebase Console. Enable it under Authentication -> Sign-in method -> Phone.';
     }
-    if (code === 'auth/unauthorized-domain') {
+    if (code === 'auth/billing-not-enabled') {
       return language === 'hi'
-        ? 'इस डोमेन को Firebase Authentication -> Authorized domains में जोड़ें।'
-        : 'Add this app domain to Firebase Console -> Authentication -> Settings -> Authorized domains.';
+        ? 'लाइव SMS OTP के लिए Firebase प्रोजेक्ट पर Blaze प्लान या "Phone numbers for testing" जोड़ना आवश्यक है।'
+        : 'Firebase requires Blaze billing enabled for live SMS OTPs (or add test phone numbers under Authentication -> Sign-in method -> Phone -> Phone numbers for testing).';
+    }
+    if (code === 'auth/quota-exceeded') {
+      return language === 'hi'
+        ? 'आज की SMS OTP सीमा पूरी हो गई है। कृपया बाद में प्रयास करें।'
+        : 'Daily SMS OTP quota exceeded on the Firebase project. Please try again later or use a Firebase test phone number.';
+    }
+    if (code === 'auth/unauthorized-domain' || code === 'auth/app-not-authorized') {
+      return language === 'hi'
+        ? `डोमेन "${currentHost}" को Firebase Console -> Authentication -> Settings -> Authorized domains में जोड़ें।`
+        : `Add "${currentHost}" to Firebase Console -> Authentication -> Settings -> Authorized domains so SMS OTP can send.`;
+    }
+    if (
+      code === 'auth/captcha-check-failed' ||
+      code === 'auth/invalid-app-credential' ||
+      code === 'auth/missing-app-credential' ||
+      code === 'auth/missing-client-identifier' ||
+      msg.toLowerCase().includes('recaptcha')
+    ) {
+      return language === 'hi'
+        ? 'सुरक्षा जांच (reCAPTCHA) पूरी नहीं हो सकी। कृपया नीचे दिए गए "I\'m not a robot" बॉक्स को टिक करें और फिर OTP भेजें।'
+        : 'Security verification (reCAPTCHA) could not verify automatically. Please complete the "I\'m not a robot" checkbox below and tap Send OTP again (disable ad blockers if hidden).';
+    }
+    if (code === 'auth/network-request-failed') {
+      return language === 'hi'
+        ? 'नेटवर्क कनेक्शन या Ad-blocker ने OTP अनुरोध को रोक दिया। कृपया इंटरनेट जाँचें या Ad-blocker बंद करें।'
+        : 'Network error or browser extension blocked Google Firebase verification. Disable ad blockers and check your connection.';
     }
     return msg || 'Could not complete OTP authentication.';
   };
@@ -138,7 +219,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMsg(null);
     setInfoMsg(null);
 
-    const cleanDigits = phoneDigits.replace(/\D/g, '');
+    const cleanDigits = normalizePhoneDigits(phoneDigits, countryCode);
     if (countryCode === '+91' && cleanDigits.length !== 10) {
       setErrorMsg(
         language === 'hi'
@@ -159,14 +240,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const e164Phone = `${countryCode}${cleanDigits}`;
     setSendingOtp(true);
     try {
-      clearVerifier();
-      if (!recaptchaMountRef.current) {
-        throw new Error('Verification container unavailable.');
+      auth.languageCode = language === 'hi' ? 'hi' : 'en';
+
+      let verifier = verifierRef.current;
+      if (recaptchaMode === 'invisible' || !verifier) {
+        clearVerifier();
+        if (!recaptchaMountRef.current) {
+          throw new Error('Verification container unavailable.');
+        }
+        const widgetNode = document.createElement('div');
+        recaptchaMountRef.current.appendChild(widgetNode);
+        verifier = new RecaptchaVerifier(auth, widgetNode, {
+          size: recaptchaMode,
+          'expired-callback': () => {
+            clearVerifier();
+          },
+        });
+        verifierRef.current = verifier;
+        await verifier.render();
       }
-      const verifier = new RecaptchaVerifier(auth, recaptchaMountRef.current, {
-        size: 'invisible',
-      });
-      verifierRef.current = verifier;
+
       const result = await signInWithPhoneNumber(auth, e164Phone, verifier);
       setConfirmationResult(result);
       setStep('otp');
@@ -174,7 +267,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setResendTimer(30);
       setInfoMsg(t.otpSentTo(e164Phone));
     } catch (err) {
+      const code = getFirebaseErrorCode(err);
+      const isCaptchaIssue =
+        code === 'auth/captcha-check-failed' ||
+        code === 'auth/invalid-app-credential' ||
+        code === 'auth/missing-app-credential' ||
+        code === 'auth/missing-client-identifier' ||
+        (err instanceof Error && err.message.toLowerCase().includes('recaptcha'));
+
       clearVerifier();
+      if (isCaptchaIssue && recaptchaMode === 'invisible') {
+        setRecaptchaMode('normal');
+      }
       setErrorMsg(mapFirebasePhoneError(err));
     } finally {
       setSendingOtp(false);
@@ -239,26 +343,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   return createPortal(
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center pt-6 sm:pt-4 px-3 sm:px-4 pb-4 overflow-y-auto up-stage-3d"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
     >
       <motion.div
-        initial={{ opacity: 0, y: 18, rotateX: -6, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
-        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         onClick={(e) => e.stopPropagation()}
-        style={{ transformStyle: 'preserve-3d' }}
-        className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0E1A36] border border-amber-500/35 dark:border-cyan-400/30 shadow-2xl overflow-hidden up-neon-rim up-neon-edge max-h-[calc(100dvh-2rem)] overflow-y-auto"
+        className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0E1A36] border border-amber-500/35 dark:border-cyan-400/30 shadow-2xl overflow-hidden up-neon-rim up-neon-edge max-h-[92dvh] overflow-y-auto pb-safe"
       >
         <div className="up-tiranga-bar w-full" aria-hidden="true" />
 
-        <div className="p-5 sm:p-6 space-y-5">
+        <div className="p-5 sm:p-6 space-y-4">
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FF9933] via-[#F59E0B] to-[#D97706] text-slate-950 flex items-center justify-center shadow-md shrink-0 up-gold-rim">
                 <Smartphone className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white leading-tight">
                   {t.authModalTitle}
                 </h3>
@@ -271,7 +374,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close sign in dialog"
-              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center cursor-pointer transition-colors"
+              className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center cursor-pointer transition-colors shrink-0"
             >
               <X className="w-4 h-4" />
             </button>
@@ -282,7 +385,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <span className="w-9 h-9 rounded-xl bg-[#F59E0B] text-slate-950 flex items-center justify-center shrink-0">
               <Gift className="w-4 h-4" />
             </span>
-            <div className="text-xs leading-snug">
+            <div className="text-xs leading-snug min-w-0">
               <div className="font-display font-bold text-[#F59E0B]">
                 {language === 'hi'
                   ? '100% निःशुल्क भागीदारी · ₹50 लाख के पुरस्कार'
@@ -308,7 +411,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
                     aria-label="Country dial code"
-                    className="px-2.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-xs font-mono-num font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="px-2.5 py-2.5 min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-sm sm:text-xs font-mono-num font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   >
                     {COUNTRY_CODES.map((c) => (
                       <option key={c.code} value={c.code}>
@@ -316,7 +419,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       </option>
                     ))}
                   </select>
-                  <div className="relative flex-1">
+                  <div className="relative flex-1 min-w-0">
                     <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="tel"
@@ -324,9 +427,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       autoComplete="tel-national"
                       maxLength={15}
                       value={phoneDigits}
-                      onChange={(e) => setPhoneDigits(e.target.value.replace(/[^\d\s-]/g, ''))}
+                      onChange={(e) => setPhoneDigits(e.target.value.replace(/[^\d+\s-]/g, ''))}
                       placeholder={t.mobilePlaceholder}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-sm font-mono-num font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                      className="w-full min-h-[44px] pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-base sm:text-sm font-mono-num font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                     />
                   </div>
                 </div>
@@ -344,19 +447,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder={t.nameOptionalPlaceholder}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full min-h-[44px] pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   />
                 </div>
               </div>
 
+              {/* Visible reCAPTCHA mount container (NEVER display:none so challenge iframe & checkbox always render cleanly) */}
+              <div
+                ref={recaptchaMountRef}
+                className="flex justify-center overflow-x-auto min-h-[2px]"
+              />
+
               <button
                 type="submit"
                 disabled={sendingOtp}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-amber-500 hover:from-amber-400 hover:to-amber-500 disabled:opacity-60 text-slate-950 font-display font-extrabold text-sm flex items-center justify-center gap-2 up-gold-rim up-md3-ripple cursor-pointer"
+                className="w-full min-h-[46px] py-3 rounded-xl bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-amber-500 hover:from-amber-400 hover:to-amber-500 disabled:opacity-60 text-slate-950 font-display font-extrabold text-sm flex items-center justify-center gap-2 up-gold-rim up-md3-ripple cursor-pointer"
               >
                 <Smartphone className="w-4 h-4" />
                 <span>{sendingOtp ? t.sendingOtp : t.sendOtp}</span>
               </button>
+
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg(null);
+                    setRecaptchaMode((m) => (m === 'invisible' ? 'normal' : 'invisible'));
+                  }}
+                  className="text-[11px] font-semibold text-blue-600 dark:text-cyan-400 hover:underline cursor-pointer"
+                >
+                  {recaptchaMode === 'invisible'
+                    ? language === 'hi'
+                      ? 'OTP में समस्या? दृश्य कैप्चा बॉक्स आज़माएं'
+                      : 'Trouble sending OTP? Switch to visible security check'
+                    : language === 'hi'
+                    ? 'अदृश्य सुरक्षा जांच पर वापस जाएं'
+                    : 'Use automatic invisible security check'}
+                </button>
+              </div>
             </form>
           ) : (
             <form onSubmit={(e) => void handleVerifyOtp(e)} className="space-y-3.5">
@@ -381,7 +509,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={otpDigits}
                     onChange={(e) => setOtpDigits(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="• • • • • •"
-                    className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-center text-lg tracking-[0.45em] font-mono-num font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full min-h-[48px] pl-9 pr-3 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-center text-lg tracking-[0.45em] font-mono-num font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   />
                 </div>
               </div>
@@ -389,7 +517,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="submit"
                 disabled={verifyingOtp}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1D4ED8] to-[#0891B2] hover:opacity-95 disabled:opacity-60 text-white font-display font-bold text-sm flex items-center justify-center gap-2 up-neon-cyan up-md3-ripple cursor-pointer"
+                className="w-full min-h-[46px] py-3 rounded-xl bg-gradient-to-r from-[#1D4ED8] to-[#0891B2] hover:opacity-95 disabled:opacity-60 text-white font-display font-bold text-sm flex items-center justify-center gap-2 up-neon-cyan up-md3-ripple cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4" />
                 <span>{verifyingOtp ? t.verifyingOtp : t.verifyOtp}</span>
@@ -403,7 +531,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     setErrorMsg(null);
                     setInfoMsg(null);
                   }}
-                  className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold cursor-pointer"
+                  className="inline-flex items-center gap-1 min-h-[36px] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>{t.changeNumber}</span>
@@ -413,7 +541,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   disabled={resendTimer > 0 || sendingOtp}
                   onClick={() => void handleSendOtp()}
-                  className="inline-flex items-center gap-1 text-blue-600 dark:text-cyan-400 disabled:text-slate-400 font-semibold cursor-pointer"
+                  className="inline-flex items-center gap-1 min-h-[36px] text-blue-600 dark:text-cyan-400 disabled:text-slate-400 font-semibold cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>
@@ -425,7 +553,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           {errorMsg && (
-            <div className="rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-3 text-xs font-semibold text-rose-700 dark:text-rose-300 leading-relaxed">
+            <div className="rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-3 text-xs font-semibold text-rose-700 dark:text-rose-300 leading-relaxed break-words">
               {errorMsg}
             </div>
           )}
@@ -444,7 +572,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             type="button"
             disabled={googleBusy}
             onClick={() => void handleGoogleClick()}
-            className="w-full py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold text-sm flex items-center justify-center gap-3 shadow-xs transition-colors up-md3-ripple cursor-pointer disabled:opacity-60"
+            className="w-full min-h-[46px] py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold text-sm flex items-center justify-center gap-3 shadow-xs transition-colors up-md3-ripple cursor-pointer disabled:opacity-60"
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -466,9 +594,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </svg>
             <span>{googleBusy ? t.signingInGoogle : t.continueGoogle}</span>
           </button>
-
-          {/* Invisible reCAPTCHA mount target */}
-          <div ref={recaptchaMountRef} className="hidden" />
         </div>
       </motion.div>
     </div>,
