@@ -94,7 +94,7 @@ import { LeaderboardSummaryTab } from './components/LeaderboardSummaryTab';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AuthModal } from './components/AuthModal';
 import { LegalComplianceModal, ProfileModal } from './components/ProfileAndLegalModals';
-import { SplashScreen } from './components/SplashScreen';
+import { LoadingScreen } from './components/LoadingScreen';
 import { OfflineIndicator } from './components/OfflineIndicator';
 
 const LOCAL_DRAFT_KEY = 'up_mandate_draft_v1';
@@ -253,7 +253,7 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [legalModalOpen, setLegalModalOpen] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const [countdownText, setCountdownText] = useState(() =>
     formatCountdown(DEFAULT_ELECTION_CONFIG.deadlineIso),
   );
@@ -1283,41 +1283,41 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-    <SplashScreen
-      visible={showSplash}
+    <LoadingScreen
+      visible={showLoadingScreen}
       language={language}
       authReady={authReady}
-      onFinish={() => setShowSplash(false)}
+      onFinish={() => setShowLoadingScreen(false)}
     />
     <div className="min-h-dvh flex flex-col bg-[#FAF6EE] dark:bg-[#050B1A] up-desi-jaali text-slate-900 dark:text-slate-100 pb-22 md:pb-8">
       {/* Top Corporate Navy Material 3 App Bar with Saffron-White-Green Tiranga Accent */}
       <header className="sticky top-0 z-40 pt-safe bg-gradient-to-r from-[#060E24]/95 via-[#0C1B44]/95 to-[#081330]/95 backdrop-blur-xl text-white border-b border-cyan-400/15 shadow-[0_8px_30px_-10px_rgba(15,23,42,0.65)]">
         <OfflineIndicator language={language} />
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-13 sm:h-14 flex items-center justify-between gap-2 sm:gap-3 lg:gap-5 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-[72px] flex items-center justify-between gap-2 sm:gap-3 lg:gap-5 overflow-hidden">
           {/* Zone 1: Brand / Back */}
-          <div className="flex items-center gap-2 min-w-0 flex-1 md:flex-none shrink">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1 md:flex-none shrink">
             {activeTab !== 'home' && (
               <button
                 type="button"
                 onClick={() => navigateTo('home')}
                 aria-label="Back to Home"
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer md:hidden shrink-0"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer md:hidden shrink-0"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-5 h-5" />
               </button>
             )}
             <button
               type="button"
               onClick={() => navigateTo('home')}
-              className="flex items-center gap-2 cursor-pointer whitespace-nowrap min-w-0"
+              className="flex items-center gap-2 sm:gap-2.5 cursor-pointer whitespace-nowrap min-w-0"
             >
               <img
                 src="/assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg"
                 alt="UP Mandate"
                 referrerPolicy="no-referrer"
-                className="w-8 h-8 rounded-lg object-cover shadow-sm ring-1 ring-amber-300/75 shrink-0"
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shadow-md ring-1.5 ring-amber-300/80 shrink-0"
               />
-              <span className="font-display font-bold text-sm sm:text-base lg:text-lg tracking-tight flex items-center gap-1.5 min-w-0 truncate">
+              <span className="font-display font-extrabold text-[17px] sm:text-xl lg:text-2xl tracking-tight flex items-center gap-1.5 min-w-0 truncate">
                 {activeTab === 'home' ? (
                   <span className="truncate">
                     UP <span className="text-[#FF9933]">Mandate</span>
@@ -1337,7 +1337,7 @@ export default function App() {
           </div>
 
           {/* Zone 2: Desktop Single-Line Nav Links */}
-          <nav className="hidden md:flex items-center justify-center min-w-0 flex-1 gap-3 lg:gap-5 xl:gap-6 text-xs lg:text-sm font-medium text-blue-100/80 overflow-x-auto">
+          <nav className="hidden md:flex items-center justify-center min-w-0 flex-1 gap-4 lg:gap-6 xl:gap-7 text-sm lg:text-base font-semibold text-blue-100/85 overflow-x-auto no-scrollbar">
             {[
               { id: 'home', label: t.nav.home },
               { id: 'parties', label: t.nav.parties },
@@ -1351,9 +1351,9 @@ export default function App() {
                   key={item.id}
                   type="button"
                   onClick={() => navigateTo(item.id as AppTab)}
-                  className={`relative py-2 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  className={`relative py-2.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                     isActive
-                      ? 'text-white font-bold'
+                      ? 'text-white font-extrabold'
                       : 'hover:text-white'
                   }`}
                 >
@@ -1372,13 +1372,13 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => navigateTo('admin')}
-                className={`relative py-2 transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-1.5 ${
+                className={`relative py-2.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-1.5 ${
                   activeTab === 'admin'
-                    ? 'text-[#F59E0B] font-bold'
+                    ? 'text-[#F59E0B] font-extrabold'
                     : 'text-amber-200/90 hover:text-[#F59E0B]'
                 }`}
               >
-                <Shield className="w-3.5 h-3.5" />
+                <Shield className="w-4 h-4" />
                 {t.nav.admin}
                 {activeTab === 'admin' && (
                   <motion.span
@@ -1392,20 +1392,20 @@ export default function App() {
           </nav>
 
           {/* Zone 3: Language Toggle (EN / हिं) + Legal Info + Profile / Account Action */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-1.5 sm:pr-2">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 pr-1 sm:pr-2">
             <div
               role="group"
               aria-label="Language Switcher"
-              className="h-8 sm:h-9 p-0.5 rounded-xl bg-white/10 border border-white/15 flex items-center"
+              className="h-10 sm:h-11 p-0.5 sm:p-1 rounded-xl bg-white/12 border border-white/20 flex items-center"
             >
-              <Languages className="w-3.5 h-3.5 text-blue-200 ml-1.5 mr-1 hidden xl:block" />
+              <Languages className="w-4 h-4 text-blue-200 ml-1.5 mr-1 hidden xl:block" />
               <button
                 type="button"
                 onClick={() => setLanguage('en')}
-                className={`h-7 px-1.5 sm:px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                className={`h-8.5 sm:h-9 px-2.5 sm:px-3 rounded-lg text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
                   language === 'en'
                     ? 'bg-[#F59E0B] text-slate-950 shadow-xs'
-                    : 'text-blue-100/80 hover:text-white'
+                    : 'text-blue-100/85 hover:text-white'
                 }`}
               >
                 EN
@@ -1413,10 +1413,10 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setLanguage('hi')}
-                className={`h-7 px-1.5 sm:px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                className={`h-8.5 sm:h-9 px-2.5 sm:px-3 rounded-lg text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
                   language === 'hi'
                     ? 'bg-[#F59E0B] text-slate-950 shadow-xs'
-                    : 'text-blue-100/80 hover:text-white'
+                    : 'text-blue-100/85 hover:text-white'
                 }`}
               >
                 हिं
@@ -1427,23 +1427,23 @@ export default function App() {
               type="button"
               onClick={() => setLegalModalOpen(true)}
               aria-label="Legal Compliance & Scoring Rules"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 text-[#F59E0B] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/12 hover:bg-white/20 text-[#F59E0B] flex items-center justify-center transition-colors cursor-pointer shrink-0"
             >
-              <Info className="w-4 h-4" />
+              <Info className="w-5 h-5" />
             </button>
 
             <button
               type="button"
               onClick={() => (firebaseUser ? setProfileModalOpen(true) : setAuthModalOpen(true))}
               aria-label="Account, Mobile OTP and Settings"
-              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-full bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-[#E65100] hover:brightness-105 text-slate-950 flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 up-md3-ripple up-gold-rim"
+              className="h-10 sm:h-11 px-2.5 sm:px-4 rounded-full bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-[#E65100] hover:brightness-105 text-slate-950 flex items-center justify-center gap-2 text-sm font-extrabold transition-all cursor-pointer whitespace-nowrap shrink-0 up-md3-ripple up-gold-rim"
             >
               {firebaseUser ? (
-                <UserIcon className="w-4 h-4 shrink-0" />
+                <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
               ) : (
-                <Smartphone className="w-4 h-4 shrink-0" />
+                <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
               )}
-              <span className="hidden sm:inline md:hidden lg:inline max-w-[110px] truncate">
+              <span className="hidden sm:inline md:hidden lg:inline max-w-[125px] truncate">
                 {firebaseUser
                   ? userProfile?.publicAlias || t.auth.account
                   : t.auth.signIn}

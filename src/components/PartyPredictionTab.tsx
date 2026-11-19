@@ -29,6 +29,7 @@ import {
 } from '../data/upParties';
 import { TRANSLATIONS } from '../i18n/translations';
 import { ChartSegment, DoughnutChart3D } from './DoughnutChart3D';
+import { NeonLeaderSquare } from './NeonLeaderSquare';
 
 interface PartyPredictionTabProps {
   parties: PartyConfig[];
@@ -310,8 +311,8 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {activeParties.map((party) => {
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 up-stage-3d">
+                {activeParties.map((party, idx) => {
                   const seats = getHistoricalPartySeats(party, selectedYear as HistoricalYear);
                   const sharePct = Math.round((seats / TOTAL_UP_SEATS) * 100);
                   const meta = getPartyMeta(party.code);
@@ -320,26 +321,19 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                   return (
                     <div
                       key={party.code}
-                      className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50/70 dark:bg-slate-900/50 space-y-2"
+                      className="rounded-2xl border border-cyan-500/20 dark:border-cyan-400/20 p-4 bg-slate-50/80 dark:bg-[#0A1633]/75 space-y-2.5 up-card-3d"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          {meta?.leaderPhotoUrl ? (
-                            <img
-                              src={meta.leaderPhotoUrl}
-                              alt={leader || party.code}
-                              referrerPolicy="no-referrer"
-                              className="w-9 h-9 rounded-lg object-cover object-top border-2 shrink-0"
-                              style={{ borderColor: party.color }}
-                            />
-                          ) : (
-                            <span
-                              className="w-9 h-9 rounded-lg border-2 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 shrink-0"
-                              style={{ borderColor: party.color }}
-                            >
-                              {party.code}
-                            </span>
-                          )}
+                      <div className="flex items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <NeonLeaderSquare
+                            src={meta?.leaderPhotoUrl}
+                            alt={leader || party.code}
+                            title={`${displayName}${leader ? ` · ${leader}` : ''}`}
+                            fallbackCode={party.code}
+                            accentColor={party.color}
+                            size="sm"
+                            phaseIndex={idx}
+                          />
                           <div className="min-w-0">
                             <span className="font-display font-bold text-sm text-slate-900 dark:text-white truncate block">
                               {language === 'hi' ? meta?.shortHi || party.code : party.code}
@@ -405,8 +399,8 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 up-stage-3d">
-                      {activeParties.map((party) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 up-stage-3d">
+                  {activeParties.map((party, idx) => {
                     const isSelected = selectedParty?.code === party.code;
                     const band = getBandByStart(currentBands[party.code] ?? 0);
                     const meta = getPartyMeta(party.code);
@@ -416,78 +410,96 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                         : meta?.shortEn || party.shortName || party.code;
                     const leaderName = language === 'hi' ? meta?.leaderHi : meta?.leaderEn;
                     const leaderPhoto = meta?.leaderPhotoUrl;
+                    const beamDelay = `${-((idx % 8) * 0.35).toFixed(2)}s`;
+                    const floatDelay = `${-((idx % 6) * 0.65).toFixed(2)}s`;
+
                     return (
                       <button
                         key={party.code}
                         type="button"
                         onClick={() => setSelectedPartyCode(party.code)}
-                        style={
-                          isSelected
+                        style={{
+                          animationDelay: floatDelay,
+                          ...(isSelected
                             ? {
-                                borderColor: party.color,
-                                boxShadow: `0 0 0 2px ${party.color}, 0 0 22px -4px ${party.color}cc, 0 12px 26px -8px rgba(10,22,51,0.55)`,
+                                boxShadow: `0 0 0 1.5px #38BDF8, 0 0 28px -1px rgba(0,240,255,0.85), 0 0 38px -6px ${party.color}cc, 0 16px 32px -10px rgba(5,11,26,0.85)`,
                               }
-                            : undefined
-                        }
-                        className={`relative aspect-square w-full overflow-hidden rounded-2xl text-left transition-all border-2 up-card-3d up-md3-ripple cursor-pointer group ${
-                          isSelected
-                            ? 'bg-[#0A1633]'
-                            : 'bg-slate-900 border-slate-300/80 dark:border-slate-700 hover:border-blue-400'
+                            : undefined),
+                        }}
+                        className={`up-leader-sq-card up-leader-float-3d aspect-square w-full text-left cursor-pointer group ${
+                          isSelected ? 'up-leader-sq-card-selected' : ''
                         }`}
                       >
-                        {/* Full-Square Leader Portrait Background */}
-                        {leaderPhoto ? (
-                          <img
-                            src={leaderPhoto}
-                            alt={leaderName || cardTitle}
-                            referrerPolicy="no-referrer"
-                            className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
+                        {/* Rotating 3D Blue Neon Light Around the Square Portrait */}
+                        <div aria-hidden="true" className="up-blue-trace-track">
                           <div
-                            className="absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 via-slate-900 to-[#0A1633]"
-                          >
-                            <span
-                              className="font-display font-extrabold text-2xl tracking-tight text-white/30"
-                            >
-                              {party.code}
-                            </span>
-                          </div>
-                        )}
+                            className="up-leader-blue-beam"
+                            style={{ animationDelay: beamDelay }}
+                          />
+                          <div
+                            className="up-leader-blue-beam-twin"
+                            style={{ animationDelay: beamDelay }}
+                          />
+                        </div>
 
-                        {/* Top & Bottom Scrims for Clear Text Readability */}
-                        <div
-                          aria-hidden="true"
-                          className="absolute inset-0 bg-gradient-to-b from-slate-950/65 via-transparent to-slate-950/95 pointer-events-none"
-                        />
-
-                        {/* Foreground Content: Top Seat Band Pill + Bottom Party & Leader Name */}
-                        <div className="relative z-10 h-full flex flex-col justify-between p-2 sm:p-2.5">
-                          <div className="flex items-center justify-between gap-1">
-                            <span
-                              className="w-3 h-3 rounded-full shrink-0 ring-2 ring-white/80 shadow-xs"
-                              style={{ backgroundColor: party.color }}
+                        {/* Inner Square Leader Image Surface */}
+                        <div className="relative z-10 w-full h-full rounded-[13.5px] overflow-hidden bg-[#06112B] ring-1 ring-inset ring-cyan-200/30 up-md3-ripple">
+                          {/* Full-Square Leader Portrait Background */}
+                          {leaderPhoto ? (
+                            <img
+                              src={leaderPhoto}
+                              alt={leaderName || cardTitle}
+                              referrerPolicy="no-referrer"
+                              className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-108"
                             />
-                            <span
-                              className={`px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-mono-num font-bold backdrop-blur-xs shadow-xs ${
-                                isSelected
-                                  ? 'bg-[#F59E0B] text-slate-950'
-                                  : 'bg-slate-950/75 text-white border border-white/15'
-                              }`}
-                            >
-                              {band.label}
-                            </span>
-                          </div>
-
-                          <div className="w-full min-w-0 pt-3">
-                            <div className="font-display font-extrabold text-xs sm:text-sm text-white truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
-                              {cardTitle}
+                          ) : (
+                            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0E2252] via-[#091534] to-[#050B1A]">
+                              <span className="font-display font-extrabold text-2xl tracking-tight text-cyan-200/40">
+                                {party.code}
+                              </span>
                             </div>
-                            {leaderName && (
-                              <div className="text-[10px] sm:text-[11px] font-semibold text-amber-200 truncate mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
-                                {leaderName}
+                          )}
+
+                          {/* 3D Specular Neon Blue Corner Glint */}
+                          <div
+                            aria-hidden="true"
+                            className="absolute inset-0 bg-gradient-to-tr from-blue-600/15 via-transparent to-cyan-300/20 pointer-events-none"
+                          />
+
+                          {/* Top & Bottom Scrims for Clear Text Readability */}
+                          <div
+                            aria-hidden="true"
+                            className="absolute inset-0 bg-gradient-to-b from-slate-950/65 via-transparent to-slate-950/95 pointer-events-none"
+                          />
+
+                          {/* Foreground Content: Top Seat Band + Bottom Party & Leader Name */}
+                          <div className="relative z-10 h-full flex flex-col justify-between p-2 sm:p-2.5">
+                            <div className="flex items-center justify-between gap-1">
+                              <span
+                                className="w-3 h-3 rounded-full shrink-0 ring-2 ring-white/85 shadow-[0_0_10px_rgba(56,189,248,0.85)]"
+                                style={{ backgroundColor: party.color }}
+                              />
+                              <span
+                                className={`px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-mono-num font-bold backdrop-blur-xs shadow-xs ${
+                                  isSelected
+                                    ? 'bg-[#F59E0B] text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.65)]'
+                                    : 'bg-slate-950/80 text-cyan-100 border border-cyan-400/35'
+                                }`}
+                              >
+                                {band.label}
+                              </span>
+                            </div>
+
+                            <div className="w-full min-w-0 pt-3">
+                              <div className="font-display font-extrabold text-xs sm:text-sm text-white truncate drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]">
+                                {cardTitle}
                               </div>
-                            )}
+                              {leaderName && (
+                                <div className="text-[10px] sm:text-[11px] font-semibold text-cyan-200 truncate mt-0.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                                  {leaderName}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </button>
@@ -500,21 +512,15 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
               {selectedParty && (
                 <div className="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-4">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {getPartyMeta(selectedParty.code)?.leaderPhotoUrl ? (
-                        <img
-                          src={getPartyMeta(selectedParty.code)?.leaderPhotoUrl}
-                          alt={getPartyMeta(selectedParty.code)?.leaderEn || selectedParty.code}
-                          referrerPolicy="no-referrer"
-                          className="w-10 h-10 rounded-xl object-cover object-top border-2 shrink-0"
-                          style={{ borderColor: selectedParty.color }}
-                        />
-                      ) : (
-                        <span
-                          className="w-3.5 h-3.5 rounded-full shrink-0"
-                          style={{ backgroundColor: selectedParty.color }}
-                        />
-                      )}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <NeonLeaderSquare
+                        src={getPartyMeta(selectedParty.code)?.leaderPhotoUrl}
+                        alt={getPartyMeta(selectedParty.code)?.leaderEn || selectedParty.code}
+                        fallbackCode={selectedParty.code}
+                        accentColor={selectedParty.color}
+                        size="md"
+                        phaseIndex={1}
+                      />
                       <div className="min-w-0">
                         <h4 className="font-display font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">
                           {selectedParty.code} ({language === 'hi' ? getPartyMeta(selectedParty.code)?.nameHi || selectedParty.name : selectedParty.name})

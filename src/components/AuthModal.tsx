@@ -68,6 +68,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [showSmsHelp, setShowSmsHelp] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
   const [domainStatus, setDomainStatus] = useState<{
@@ -201,10 +202,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const normalizePhoneDigits = (raw: string, code: string): string => {
     let digits = raw.replace(/\D/g, '');
     if (code === '+91') {
-      if (digits.length === 12 && digits.startsWith('91')) {
+      if (digits.length === 14 && digits.startsWith('0091')) {
+        digits = digits.slice(4);
+      } else if (digits.length === 12 && digits.startsWith('91')) {
         digits = digits.slice(2);
       } else if (digits.length === 11 && digits.startsWith('0')) {
         digits = digits.slice(1);
+      }
+    } else {
+      const bareCode = code.replace(/\D/g, '');
+      if (bareCode && digits.startsWith(`00${bareCode}`) && digits.length > bareCode.length + 7) {
+        digits = digits.slice(bareCode.length + 2);
+      } else if (bareCode && digits.startsWith(bareCode) && digits.length > bareCode.length + 7) {
+        digits = digits.slice(bareCode.length);
       }
     }
     return digits;
@@ -334,7 +344,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setConfirmationResult(result);
       setStep('otp');
       setOtpDigits('');
-      setResendTimer(30);
+      setShowSmsHelp(false);
+      setResendTimer(60);
       setInfoMsg(t.otpSentTo(e164Phone));
       if (recaptchaMode === 'invisible') {
         clearVerifier();
@@ -582,9 +593,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       type="tel"
                       inputMode="numeric"
                       autoComplete="tel-national"
-                      maxLength={15}
+                      maxLength={20}
                       value={phoneDigits}
-                      onChange={(e) => setPhoneDigits(e.target.value.replace(/[^\d+\s-]/g, ''))}
+                      onChange={(e) => setPhoneDigits(e.target.value.replace(/[^\d+\s()-]/g, ''))}
                       placeholder={t.mobilePlaceholder}
                       className="w-full min-h-[44px] pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-base sm:text-sm font-mono-num font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                     />
@@ -713,6 +724,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     {resendTimer > 0 ? t.resendIn(resendTimer) : t.resendOtp}
                   </span>
                 </button>
+              </div>
+
+              <div className="pt-0.5 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowSmsHelp((v) => !v)}
+                  className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 underline cursor-pointer"
+                >
+                  {language === 'hi'
+                    ? 'SMS OTP नहीं मिला? संभावित कारण देखें'
+                    : "Didn't receive SMS OTP on this number?"}
+                </button>
+                {showSmsHelp && (
+                  <div className="mt-2 text-left rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/70 dark:border-amber-700/60 p-3 text-[11px] text-amber-950 dark:text-amber-100 space-y-1.5 leading-relaxed">
+                    <div className="font-bold">
+                      {language === 'hi'
+                        ? 'यदि केवल एक नंबर पर OTP नहीं आ रहा है:'
+                        : 'If SMS OTP works on other numbers but not this one:'}
+                    </div>
+                    <ul className="list-disc pl-4 space-y-1">
+                      <li>
+                        {language === 'hi'
+                          ? 'Messages ऐप में "Spam & blocked" फ़ोल्डर जाँचें और DND/अंतर्राष्ट्रीय SMS ब्लॉक बंद है या नहीं देखें।'
+                          : 'Check "Spam & blocked" in your Messages app and ensure carrier DND/A2P SMS filtering is not blocking Firebase SMS.'}
+                      </li>
+                      <li>
+                        {language === 'hi'
+                          ? 'बार-बार टेस्ट करने पर Firebase एक नंबर को 1–24 घंटे के लिए अस्थायी रूप से थ्रॉटल कर देता है।'
+                          : 'Repeated testing on the same number triggers a 1–24h Firebase per-number SMS cooldown.'}
+                      </li>
+                      <li>
+                        {language === 'hi'
+                          ? 'यदि यह नंबर Firebase Console → Phone → "Phone numbers for testing" में जुड़ा है, तो असली SMS नहीं आएगा—केवल वहीं सेट किया गया टेस्ट कोड काम करेगा।'
+                          : 'If this number is listed in Firebase Console → Phone → "Phone numbers for testing", Firebase suppresses real SMS and only accepts the configured test code.'}
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </div>
             </form>
           )}

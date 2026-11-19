@@ -573,6 +573,126 @@ input[type="range"].up-slider::-moz-range-thumb {
     0 0 32px rgba(245, 158, 11, 0.55);
 }
 
+/* 3D Animated Party Leader Square with Rotating Blue Neon Border */
+@keyframes upLeaderFloat3d {
+  0%, 100% {
+    transform: perspective(900px) rotateX(2.5deg) rotateY(-2.5deg) translateY(0px);
+  }
+  50% {
+    transform: perspective(900px) rotateX(-2deg) rotateY(2.5deg) translateY(-3px);
+  }
+}
+
+.up-leader-float-3d {
+  animation: upLeaderFloat3d 5.6s ease-in-out infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.up-leader-sq-card {
+  position: relative;
+  border-radius: 1rem;
+  padding: 2.5px;
+  isolation: isolate;
+  transform-style: preserve-3d;
+  transition:
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 0 18px -3px rgba(56, 189, 248, 0.62),
+    0 0 32px -8px rgba(37, 99, 235, 0.52),
+    0 12px 24px -10px rgba(5, 11, 26, 0.65);
+}
+
+.up-leader-sq-card-selected {
+  box-shadow:
+    0 0 0 1px rgba(125, 211, 252, 0.85),
+    0 0 26px -1px rgba(0, 240, 255, 0.8),
+    0 0 44px -6px rgba(37, 99, 235, 0.72),
+    0 16px 32px -10px rgba(5, 11, 26, 0.8);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .up-leader-sq-card:hover {
+    transform: perspective(950px) translateY(-6px) rotateX(5deg) rotateY(-3deg) scale(1.025);
+    box-shadow:
+      0 0 26px -1px rgba(0, 240, 255, 0.78),
+      0 0 42px -6px rgba(37, 99, 235, 0.68),
+      0 18px 34px -10px rgba(5, 11, 26, 0.78);
+  }
+}
+
+.up-leader-sq-card:active {
+  transform: scale(0.97);
+}
+
+.up-leader-sq-avatar {
+  position: relative;
+  border-radius: 0.75rem;
+  padding: 2px;
+  isolation: isolate;
+  transform-style: preserve-3d;
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 0 14px -2px rgba(56, 189, 248, 0.72),
+    0 0 24px -5px rgba(37, 99, 235, 0.58),
+    0 6px 14px -4px rgba(5, 11, 26, 0.55);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .up-leader-sq-avatar:hover {
+    transform: perspective(700px) translateY(-3px) rotateX(6deg) rotateY(-5deg) scale(1.08);
+    box-shadow:
+      0 0 20px 0px rgba(0, 240, 255, 0.9),
+      0 0 32px -4px rgba(37, 99, 235, 0.72),
+      0 10px 20px -6px rgba(5, 11, 26, 0.7);
+  }
+}
+
+.up-leader-blue-beam {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240%;
+  aspect-ratio: 1 / 1;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 185deg,
+    rgba(29, 78, 216, 0.4) 235deg,
+    rgba(37, 99, 235, 0.85) 280deg,
+    #38bdf8 318deg,
+    #7dd3fc 340deg,
+    #e0f2fe 352deg,
+    #00f0ff 357deg,
+    transparent 360deg
+  );
+  animation: upBlueLineOrbit 2.8s linear infinite;
+  will-change: transform;
+}
+
+.up-leader-blue-beam-twin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240%;
+  aspect-ratio: 1 / 1;
+  background: conic-gradient(
+    from 180deg,
+    transparent 0deg,
+    transparent 245deg,
+    rgba(37, 99, 235, 0.55) 295deg,
+    rgba(56, 189, 248, 0.95) 338deg,
+    #bae6fd 354deg,
+    transparent 360deg
+  );
+  animation: upBlueLineOrbit 2.8s linear infinite;
+  will-change: transform;
+  opacity: 0.85;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .up-card-3d,
   .up-md3-ripple,
@@ -585,11 +705,16 @@ input[type="range"].up-slider::-moz-range-thumb {
   .up-blue-trace-beam,
   .up-blue-trace-beam-twin,
   .up-prize-float,
+  .up-leader-float-3d,
+  .up-leader-blue-beam,
+  .up-leader-blue-beam-twin,
   * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
-  .up-card-3d:hover {
+  .up-card-3d:hover,
+  .up-leader-sq-card:hover,
+  .up-leader-sq-avatar:hover {
     transform: none !important;
   }
 }

@@ -173,8 +173,8 @@ export function mapFirebaseAuthError(
   }
   if (code === 'auth/too-many-requests') {
     return language === 'hi'
-      ? 'बहुत अधिक प्रयास किए गए। कृपया कुछ मिनट बाद पुनः प्रयास करें।'
-      : 'Too many OTP attempts from this device/number. Please wait a few minutes and try again.';
+      ? 'इस मोबाइल नंबर पर हाल ही में कई OTP भेजे जाने के कारण Firebase ने इस नंबर को अस्थायी रूप से रोक (cooldown) दिया है। कृपया 1–24 घंटे बाद प्रयास करें या Google से लॉगिन करें। [auth/too-many-requests]'
+      : 'Firebase temporarily rate-limited OTPs for this specific phone number due to repeated recent attempts (other numbers still work). Wait 1–24 hours for the cooldown to clear, or sign in with Google now. [auth/too-many-requests]';
   }
   if (code === 'auth/operation-not-allowed') {
     return language === 'hi'

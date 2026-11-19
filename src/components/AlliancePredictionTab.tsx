@@ -37,6 +37,7 @@ import {
 } from '../data/upAlliances';
 import { TRANSLATIONS } from '../i18n/translations';
 import { ChartSegment, DoughnutChart3D } from './DoughnutChart3D';
+import { NeonLeaderSquare } from './NeonLeaderSquare';
 
 interface AlliancePredictionTabProps {
   prediction: UserPredictionData;
@@ -369,18 +370,19 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                         </span>
                       </div>
 
-                      <div className="flex -space-x-2 pt-0.5">
-                        {alliance.partyCodes.map((pCode) => {
+                      <div className="flex flex-wrap items-center gap-2 pt-1 up-stage-3d">
+                        {alliance.partyCodes.map((pCode, pIdx) => {
                           const meta = getPartyMeta(pCode);
-                          if (!meta?.leaderPhotoUrl) return null;
                           return (
-                            <img
+                            <NeonLeaderSquare
                               key={pCode}
-                              src={meta.leaderPhotoUrl}
-                              alt={meta.leaderEn}
-                              title={`${meta.shortEn} · ${meta.leaderEn}`}
-                              referrerPolicy="no-referrer"
-                              className="w-8 h-8 rounded-full object-cover object-top ring-2 ring-white dark:ring-slate-900"
+                              src={meta?.leaderPhotoUrl}
+                              alt={meta?.leaderEn || pCode}
+                              title={`${meta?.shortEn || pCode}${meta?.leaderEn ? ` · ${meta.leaderEn}` : ''}`}
+                              fallbackCode={pCode}
+                              accentColor={getPartyColor(pCode)}
+                              size="sm"
+                              phaseIndex={pIdx}
                             />
                           );
                         })}
@@ -512,30 +514,25 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                           </span>
                         </div>
 
-                        {/* Member Party Badges + Leader Avatars */}
-                        <div className="mt-3.5 flex items-center justify-between gap-2">
-                          <div className="flex -space-x-2">
-                            {alliance.partyCodes.map((pCode) => {
+                        {/* Member Party 3D Neon Blue Square Leader Portraits */}
+                        <div className="mt-3.5 flex items-center justify-between gap-2.5">
+                          <div className="flex flex-wrap items-center gap-2 up-stage-3d">
+                            {alliance.partyCodes.map((pCode, pIdx) => {
                               const meta = getPartyMeta(pCode);
-                              if (!meta?.leaderPhotoUrl) {
-                                return (
-                                  <span
-                                    key={pCode}
-                                    className="w-9 h-9 rounded-full bg-slate-700 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900"
-                                    title={meta?.shortEn || pCode}
-                                  >
-                                    {pCode}
-                                  </span>
-                                );
-                              }
+                              const leaderLabel =
+                                language === 'hi'
+                                  ? meta?.leaderHi || meta?.shortHi || pCode
+                                  : meta?.leaderEn || meta?.shortEn || pCode;
                               return (
-                                <img
+                                <NeonLeaderSquare
                                   key={pCode}
-                                  src={meta.leaderPhotoUrl}
-                                  alt={meta.leaderEn}
-                                  title={`${meta.shortEn} · ${language === 'hi' ? meta.leaderHi : meta.leaderEn}`}
-                                  referrerPolicy="no-referrer"
-                                  className="w-9 h-9 rounded-full object-cover object-top ring-2 ring-white dark:ring-slate-900"
+                                  src={meta?.leaderPhotoUrl}
+                                  alt={leaderLabel}
+                                  title={`${meta?.shortEn || pCode} · ${leaderLabel}`}
+                                  fallbackCode={pCode}
+                                  accentColor={getPartyColor(pCode)}
+                                  size="md"
+                                  phaseIndex={pIdx}
                                 />
                               );
                             })}
@@ -588,12 +585,24 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
 
               {/* Step 2: 5-Seat Band Selector for Selected Alliance */}
               <div className="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span
-                      className="w-3.5 h-3.5 rounded-full shrink-0"
-                      style={{ backgroundColor: selectedAlliance.color }}
-                    />
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-1.5 shrink-0 up-stage-3d">
+                      {selectedAlliance.partyCodes.slice(0, 3).map((pCode, pIdx) => {
+                        const meta = getPartyMeta(pCode);
+                        return (
+                          <NeonLeaderSquare
+                            key={pCode}
+                            src={meta?.leaderPhotoUrl}
+                            alt={meta?.leaderEn || pCode}
+                            fallbackCode={pCode}
+                            accentColor={getPartyColor(pCode)}
+                            size="sm"
+                            phaseIndex={pIdx}
+                          />
+                        );
+                      })}
+                    </div>
                     <div className="min-w-0">
                       <h4 className="font-display font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">
                         {language === 'hi' ? selectedAlliance.nameHi : selectedAlliance.nameEn}
