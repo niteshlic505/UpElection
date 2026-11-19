@@ -734,7 +734,7 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
         </div>
 
         {/* Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-0.5">
           {[
             { id: 'ALL', label: t.allLabel(constituencies.length) },
             { id: 'MY_PICKS', label: t.myPicksLabel(predictedCount) },
@@ -755,9 +755,9 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
                   setPartyFilter(chip.id);
                   setPage(1);
                 }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                   active
-                    ? 'bg-[#0A1633] dark:bg-[#1D4ED8] text-white'
+                    ? 'bg-[#0A1633] dark:bg-[#1D4ED8] text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
@@ -881,7 +881,7 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
         </div>
       </div>
 
-      {/* Top-Anchored Viewport Dialog Portal (Mobile / Tablet < lg) */}
+      {/* Native Bottom-Sheet Dialog Portal (Mobile / Tablet < lg) */}
       {mobileModalOpen &&
         typeof document !== 'undefined' &&
         createPortal(
@@ -890,13 +890,17 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
             aria-modal="true"
             aria-label={selectedSeat ? `AC ${selectedSeat.acNo} ${selectedSeat.name}` : 'Constituency prediction'}
             onClick={() => setMobileModalOpen(false)}
-            className="lg:hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-start justify-center pt-4 sm:pt-8 px-3 sm:px-4 pb-4 overflow-y-auto"
+            className="lg:hidden fixed inset-0 z-50 bg-slate-950/72 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden"
           >
             <div
               ref={mobileModalPanelRef}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl bg-white dark:bg-[#0C1732] border border-amber-500/25 dark:border-cyan-400/30 p-5 pb-6 shadow-2xl up-md3-elev-3 up-neon-edge"
+              className="w-full max-w-xl max-h-[90dvh] sm:max-h-[88dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0C1732] border-t sm:border border-amber-500/25 dark:border-cyan-400/30 px-4 sm:px-5 pt-2.5 sm:pt-5 pb-6 pb-safe shadow-2xl up-md3-elev-3 up-neon-edge"
             >
+              <div
+                aria-hidden="true"
+                className="sm:hidden w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto mb-3.5"
+              />
               {renderDetailPanel(true)}
             </div>
           </div>,

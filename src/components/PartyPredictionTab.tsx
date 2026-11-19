@@ -169,7 +169,7 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
   return (
     <div className="space-y-5">
       {/* Year Toggle Bar (2007 | 2012 | 2017 | 2022 | 2027 Predict) */}
-      <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/20 dark:border-cyan-400/20 p-2 up-md3-elev-1">
+      <div className="rounded-2xl up-glass-surface border border-amber-500/20 dark:border-cyan-400/20 ring-1 ring-inset ring-white/55 dark:ring-white/6 p-1.5 sm:p-2 up-md3-elev-1">
         <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
           {YEARS.map((yr) => {
             const active = selectedYear === yr;
@@ -179,16 +179,16 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                 key={yr}
                 type="button"
                 onClick={() => setSelectedYear(yr)}
-                className={`py-2.5 px-1 sm:px-2 rounded-xl text-center transition-all up-md3-ripple cursor-pointer ${
+                className={`py-2 px-1 sm:px-2 min-h-[44px] flex flex-col items-center justify-center rounded-xl text-center transition-all up-md3-ripple cursor-pointer ${
                   active
                     ? 'bg-[#0A1633] dark:bg-[#1D4ED8] text-white up-neon-rim'
                     : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70'
                 }`}
               >
-                <div className="font-display font-bold text-sm font-mono-num">{yr}</div>
+                <div className="font-display font-bold text-xs sm:text-sm font-mono-num">{yr}</div>
                 {isPredict && (
                   <div
-                    className={`text-[10px] font-semibold tracking-wide ${
+                    className={`text-[9px] sm:text-[10px] font-semibold tracking-wide leading-tight ${
                       active ? 'text-[#F59E0B]' : 'text-blue-600 dark:text-blue-400'
                     }`}
                   >
@@ -587,11 +587,11 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                       aria-label={`Select 5-seat prediction band for ${selectedParty.name}`}
                       className="w-full up-slider"
                     />
-                    <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono-num">
+                    <div className="flex justify-between text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-mono-num">
                       <span>0–4</span>
-                      <span>100–104</span>
+                      <span className="hidden sm:inline">100–104</span>
                       <span>200–204 (202)</span>
-                      <span>300–304</span>
+                      <span className="hidden sm:inline">300–304</span>
                       <span>400–403</span>
                     </div>
                   </div>
@@ -601,14 +601,14 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowAllBands((prev) => !prev)}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1.5 min-h-[36px] text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                     >
                       <SlidersHorizontal className="w-3.5 h-3.5" />
                       {showAllBands ? t.hideAllBands : t.showAllBands}
                     </button>
 
                     {showAllBands && (
-                      <div className="max-h-56 overflow-y-auto grid grid-cols-4 sm:grid-cols-6 gap-1.5 mt-3 pr-1">
+                      <div className="max-h-56 overflow-y-auto grid grid-cols-3 sm:grid-cols-6 gap-1.5 mt-3 pr-1">
                         {SEAT_BANDS.map((band) => {
                           const isCurrent = band.index === currentBand.index;
                           return (
@@ -617,7 +617,7 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                               type="button"
                               disabled={isLocked}
                               onClick={() => handleSetBandIndex(band.index)}
-                              className={`py-2 px-1.5 rounded-lg text-[11px] font-mono-num font-semibold transition-colors cursor-pointer ${
+                              className={`py-2.5 px-1.5 min-h-[40px] rounded-xl text-[11px] font-mono-num font-semibold transition-colors cursor-pointer ${
                                 isCurrent
                                   ? 'bg-[#1D4ED8] text-white shadow-sm'
                                   : 'bg-white dark:bg-[#0F1B35] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400'

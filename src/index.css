@@ -314,54 +314,263 @@
   background-size: 48px 48px, 48px 48px, 48px 48px, 48px 48px;
 }
 
-/* Custom sleek Material 3 slider */
+/* Custom sleek Material 3 slider (touch-optimized for mobile phones) */
 input[type="range"].up-slider {
   -webkit-appearance: none;
   appearance: none;
-  height: 8px;
+  height: 10px;
   border-radius: 9999px;
-  background: #dbeafe;
+  background: linear-gradient(90deg, rgba(255, 153, 51, 0.28), rgba(29, 78, 216, 0.25));
   outline: none;
+  touch-action: pan-y;
 }
 
 .dark input[type="range"].up-slider {
-  background: #1e293b;
+  background: linear-gradient(90deg, rgba(255, 153, 51, 0.22), rgba(34, 211, 238, 0.22));
 }
 
 input[type="range"].up-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #1d4ed8, #06b6d4);
+  background: linear-gradient(135deg, #ff9933, #1d4ed8 58%, #06b6d4);
   border: 3px solid #ffffff;
   box-shadow:
-    0 0 0 3px rgba(6, 182, 212, 0.25),
-    0 3px 12px rgba(29, 78, 216, 0.55);
+    0 0 0 3px rgba(6, 182, 212, 0.24),
+    0 4px 14px rgba(29, 78, 216, 0.45);
   cursor: pointer;
   transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 input[type="range"].up-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.14);
+  transform: scale(1.12);
 }
 
 input[type="range"].up-slider::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #1d4ed8, #06b6d4);
+  background: linear-gradient(135deg, #ff9933, #1d4ed8 58%, #06b6d4);
   border: 3px solid #ffffff;
   box-shadow:
-    0 0 0 3px rgba(6, 182, 212, 0.25),
-    0 3px 12px rgba(29, 78, 216, 0.55);
+    0 0 0 3px rgba(6, 182, 212, 0.24),
+    0 4px 14px rgba(29, 78, 216, 0.45);
   cursor: pointer;
 }
 
-/* Safe bottom spacing on mobile */
+/* Executive glass surface utility */
+.up-glass-surface {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.dark .up-glass-surface {
+  background: rgba(11, 22, 49, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Clean horizontal scroll rails on mobile without visible scrollbar bars */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area insets for standalone PWA / iOS notch & Android gesture bar */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 3D Moving Neon Blue Line Around Square/Card Perimeter */
+@keyframes upBlueLineOrbit {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes upPieAmbient3d {
+  0%, 100% {
+    transform: rotateX(12deg) rotateY(-8deg) translateY(0px);
+  }
+  25% {
+    transform: rotateX(15deg) rotateY(7deg) translateY(-4px);
+  }
+  50% {
+    transform: rotateX(9deg) rotateY(9deg) translateY(-2px);
+  }
+  75% {
+    transform: rotateX(14deg) rotateY(-6deg) translateY(-5px);
+  }
+}
+
+@keyframes upPrizeCardFloat {
+  0%, 100% {
+    transform: perspective(1200px) rotateX(2deg) rotateY(-1.8deg) translateY(0px);
+  }
+  50% {
+    transform: perspective(1200px) rotateX(-1.5deg) rotateY(1.8deg) translateY(-4px);
+  }
+}
+
+@keyframes upNeonRingSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes upNeonCorePulse {
+  0%, 100% {
+    opacity: 0.65;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+.up-pie-ambient-3d {
+  animation: upPieAmbient3d 7.5s ease-in-out infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.up-pie-orbit-ring {
+  animation: upNeonRingSpin 9s linear infinite;
+  will-change: transform;
+}
+
+.up-pie-orbit-ring-reverse {
+  animation: upNeonRingSpin 14s linear infinite reverse;
+  will-change: transform;
+}
+
+.up-neon-core-pulse {
+  animation: upNeonCorePulse 3.6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* 3D Neon Blue Traveling Border Container */
+.up-blue-trace-shell {
+  position: relative;
+  border-radius: 1.5rem;
+  padding: 2.5px;
+  isolation: isolate;
+  box-shadow:
+    0 0 24px -2px rgba(56, 189, 248, 0.52),
+    0 0 54px -8px rgba(37, 99, 235, 0.5),
+    0 20px 44px -14px rgba(5, 11, 26, 0.72);
+}
+
+.up-blue-trace-shell-sm {
+  position: relative;
+  border-radius: 1rem;
+  padding: 2px;
+  isolation: isolate;
+  box-shadow:
+    0 0 20px -2px rgba(56, 189, 248, 0.58),
+    0 0 36px -6px rgba(37, 99, 235, 0.48),
+    0 12px 28px -10px rgba(5, 11, 26, 0.65);
+}
+
+.up-blue-trace-track {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Primary Razor-Sharp 3D Neon Blue Laser Line Traveling Around Square */
+.up-blue-trace-beam {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240%;
+  aspect-ratio: 1 / 1;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 210deg,
+    rgba(29, 78, 216, 0.25) 250deg,
+    rgba(37, 99, 235, 0.75) 285deg,
+    #38bdf8 320deg,
+    #7dd3fc 342deg,
+    #e0f2fe 352deg,
+    #00f0ff 357deg,
+    transparent 360deg
+  );
+  animation: upBlueLineOrbit 3.4s linear infinite;
+  will-change: transform;
+}
+
+/* Secondary Counter-Phase Blue Tail for Continuous 3D Depth */
+.up-blue-trace-beam-twin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240%;
+  aspect-ratio: 1 / 1;
+  background: conic-gradient(
+    from 180deg,
+    transparent 0deg,
+    transparent 255deg,
+    rgba(59, 130, 246, 0.45) 305deg,
+    rgba(56, 189, 248, 0.92) 340deg,
+    #bae6fd 354deg,
+    transparent 360deg
+  );
+  animation: upBlueLineOrbit 3.4s linear infinite;
+  will-change: transform;
+  opacity: 0.78;
+}
+
+/* Outer Soft Blue Atmospheric Glow Following the Moving Line */
+.up-blue-trace-halo {
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  overflow: hidden;
+  filter: blur(14px);
+  opacity: 0.72;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.up-prize-float {
+  animation: upPrizeCardFloat 6.2s ease-in-out infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.up-neon-text-blue {
+  text-shadow:
+    0 0 12px rgba(56, 189, 248, 0.85),
+    0 0 26px rgba(37, 99, 235, 0.65);
+}
+
+.up-neon-text-gold-strong {
+  text-shadow:
+    0 0 14px rgba(251, 191, 36, 0.8),
+    0 0 32px rgba(245, 158, 11, 0.55);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -369,6 +578,13 @@ input[type="range"].up-slider::-moz-range-thumb {
   .up-md3-ripple,
   .up-float-3d,
   .up-neon-pulse,
+  .up-pie-ambient-3d,
+  .up-pie-orbit-ring,
+  .up-pie-orbit-ring-reverse,
+  .up-neon-core-pulse,
+  .up-blue-trace-beam,
+  .up-blue-trace-beam-twin,
+  .up-prize-float,
   * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;

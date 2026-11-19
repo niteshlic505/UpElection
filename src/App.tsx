@@ -94,6 +94,8 @@ import { LeaderboardSummaryTab } from './components/LeaderboardSummaryTab';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AuthModal } from './components/AuthModal';
 import { LegalComplianceModal, ProfileModal } from './components/ProfileAndLegalModals';
+import { SplashScreen } from './components/SplashScreen';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 const LOCAL_DRAFT_KEY = 'up_mandate_draft_v1';
 const THEME_KEY = 'up_mandate_theme';
@@ -251,6 +253,7 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [countdownText, setCountdownText] = useState(() =>
     formatCountdown(DEFAULT_ELECTION_CONFIG.deadlineIso),
   );
@@ -1280,10 +1283,17 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-    <div className="min-h-screen flex flex-col bg-[#FAF6EE] dark:bg-[#050B1A] up-desi-jaali text-slate-900 dark:text-slate-100 pb-20 md:pb-8">
+    <SplashScreen
+      visible={showSplash}
+      language={language}
+      authReady={authReady}
+      onFinish={() => setShowSplash(false)}
+    />
+    <div className="min-h-dvh flex flex-col bg-[#FAF6EE] dark:bg-[#050B1A] up-desi-jaali text-slate-900 dark:text-slate-100 pb-22 md:pb-8">
       {/* Top Corporate Navy Material 3 App Bar with Saffron-White-Green Tiranga Accent */}
-      <header className="sticky top-0 z-40 bg-gradient-to-r from-[#060E24]/95 via-[#0C1B44]/95 to-[#081330]/95 backdrop-blur-md text-white border-b border-cyan-400/15 shadow-[0_8px_30px_-10px_rgba(37,99,235,0.52)]">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2 sm:gap-3 lg:gap-5 overflow-hidden">
+      <header className="sticky top-0 z-40 pt-safe bg-gradient-to-r from-[#060E24]/95 via-[#0C1B44]/95 to-[#081330]/95 backdrop-blur-xl text-white border-b border-cyan-400/15 shadow-[0_8px_30px_-10px_rgba(15,23,42,0.65)]">
+        <OfflineIndicator language={language} />
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-13 sm:h-14 flex items-center justify-between gap-2 sm:gap-3 lg:gap-5 overflow-hidden">
           {/* Zone 1: Brand / Back */}
           <div className="flex items-center gap-2 min-w-0 flex-1 md:flex-none shrink">
             {activeTab !== 'home' && (
@@ -1301,9 +1311,12 @@ export default function App() {
               onClick={() => navigateTo('home')}
               className="flex items-center gap-2 cursor-pointer whitespace-nowrap min-w-0"
             >
-              <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF9933] via-[#F59E0B] to-[#D97706] text-slate-950 font-display font-extrabold text-xs flex items-center justify-center shadow-sm ring-1 ring-amber-200/70 shrink-0">
-                UP
-              </span>
+              <img
+                src="/assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg"
+                alt="UP Mandate"
+                referrerPolicy="no-referrer"
+                className="w-8 h-8 rounded-lg object-cover shadow-sm ring-1 ring-amber-300/75 shrink-0"
+              />
               <span className="font-display font-bold text-sm sm:text-base lg:text-lg tracking-tight flex items-center gap-1.5 min-w-0 truncate">
                 {activeTab === 'home' ? (
                   <span className="truncate">
@@ -1442,7 +1455,7 @@ export default function App() {
       </header>
 
       {/* Main Content Container */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 up-stage-3d">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 up-stage-3d">
         {authError && (
           <div className="mb-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-3.5 text-xs font-semibold text-rose-800 dark:text-rose-200 flex items-start justify-between gap-3">
             <div className="space-y-2 min-w-0">
@@ -1589,9 +1602,9 @@ export default function App() {
       {/* Mobile Fixed Material 3 Bottom Navigation Bar */}
       <nav
         aria-label="Primary Mobile Navigation"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#09142C]/95 backdrop-blur-md border-t border-amber-500/20 dark:border-cyan-400/20 pb-safe up-md3-elev-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#081229]/95 backdrop-blur-xl border-t border-amber-500/20 dark:border-cyan-400/20 pb-safe shadow-[0_-8px_28px_-12px_rgba(10,22,51,0.28)]"
       >
-        <div className={`grid h-16 items-center ${canAccessAdmin ? 'grid-cols-6' : 'grid-cols-5'}`}>
+        <div className={`grid h-[62px] items-center px-1 ${canAccessAdmin ? 'grid-cols-6' : 'grid-cols-5'}`}>
           {[
             { id: 'home', label: t.nav.home, Icon: Home },
             { id: 'parties', label: t.nav.parties, Icon: PieChart },
@@ -1606,13 +1619,13 @@ export default function App() {
                 key={id}
                 type="button"
                 onClick={() => navigateTo(id as AppTab)}
-                className={`flex flex-col items-center justify-center gap-1 h-full transition-colors cursor-pointer up-md3-ripple px-0.5 ${
+                className={`flex flex-col items-center justify-center gap-0.5 h-full min-h-[48px] transition-colors cursor-pointer up-md3-ripple px-0.5 ${
                   active
                     ? 'text-[#1D4ED8] dark:text-cyan-300'
                     : 'text-slate-500 dark:text-slate-400'
                 }`}
               >
-                <span className="relative w-12 h-7 rounded-full flex items-center justify-center">
+                <span className="relative w-11 h-7 rounded-full flex items-center justify-center">
                   {active && (
                     <motion.span
                       layoutId="activeMobileNavPill"
@@ -1620,9 +1633,9 @@ export default function App() {
                       className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-100 via-blue-100 to-cyan-100 dark:from-amber-500/25 dark:via-blue-500/30 dark:to-cyan-500/25 shadow-[0_0_16px_-3px_rgba(34,211,238,0.65)] ring-1 ring-amber-400/40 dark:ring-cyan-400/40"
                     />
                   )}
-                  <Icon className={`relative z-10 w-4 h-4 ${active ? 'stroke-[2.4]' : 'stroke-[1.9]'}`} />
+                  <Icon className={`relative z-10 w-[18px] h-[18px] ${active ? 'stroke-[2.4]' : 'stroke-[1.9]'}`} />
                 </span>
-                <span className="text-[10px] sm:text-[11px] font-semibold tracking-tight truncate max-w-full">
+                <span className="text-[10px] font-semibold tracking-tight truncate max-w-full leading-tight">
                   {label}
                 </span>
               </button>

@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { AppLanguage, UserPredictionData, UserProfileData } from '../types/election';
+import { APP_VERSION_CODE, APP_VERSION_NAME } from '../config/appVersion';
 
 interface ProfileModalProps {
   open: boolean;
@@ -94,8 +95,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0E1A36] border border-amber-500/25 dark:border-cyan-400/25 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto up-neon-rim">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0E1A36] border-t sm:border border-amber-500/25 dark:border-cyan-400/25 px-5 sm:px-6 pt-3 sm:pt-6 pb-6 pb-safe shadow-2xl space-y-5 max-h-[90dvh] overflow-y-auto up-neon-rim"
+      >
+        <div
+          aria-hidden="true"
+          className="sm:hidden w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto -mb-1"
+        />
         <div className="flex items-center justify-between">
           <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white">
             Profile &amp; Privacy Settings
@@ -298,7 +309,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           )}
 
           <div className="pt-2 text-center text-[11px] font-mono-num text-slate-400 dark:text-slate-500">
-            UP Mandate · 403 Vidhan Sabha Seats
+            UP Mandate · v{APP_VERSION_NAME} (Build {APP_VERSION_CODE}) · 403 Seats
           </div>
         </div>
       </div>
@@ -314,8 +325,18 @@ interface LegalModalProps {
 export const LegalComplianceModal: React.FC<LegalModalProps> = ({ open, onClose }) => {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl rounded-3xl bg-white dark:bg-[#0E1A36] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto up-neon-rim">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-2xl rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0E1A36] border-t sm:border border-slate-200 dark:border-slate-800 px-5 sm:px-6 pt-3 sm:pt-6 pb-6 pb-safe shadow-2xl space-y-4 max-h-[90dvh] sm:max-h-[88dvh] overflow-y-auto up-neon-rim"
+      >
+        <div
+          aria-hidden="true"
+          className="sm:hidden w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto -mb-1"
+        />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-cyan-400" />

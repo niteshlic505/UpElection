@@ -27,6 +27,10 @@ import {
 import { TOTAL_UP_SEATS, getBandByStart, getBandDisplaySeats } from '../data/upParties';
 import { TRANSLATIONS } from '../i18n/translations';
 import upVidhanTwilightImg from '../assets/images/up_vidhan_twilight_1794969822354.jpg';
+import { PWAInstallButton } from './PWAInstallButton';
+import { PrizeShowcaseCard } from './PrizeShowcaseCard';
+
+const UP_MONTAGE_ART = '/assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg';
 
 interface HomeTabProps {
   userProfile: UserProfileData | null;
@@ -62,7 +66,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   onOpenLegal,
 }) => {
   const [heroTilt, setHeroTilt] = useState({ rotateX: 0, rotateY: 0 });
-  const [prizeTilt, setPrizeTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [bgImgError, setBgImgError] = useState(false);
   const t = TRANSLATIONS[language];
 
   const allocated = parties.reduce(
@@ -82,7 +86,26 @@ export const HomeTab: React.FC<HomeTabProps> = ({
     .join('');
 
   return (
-    <div className="relative space-y-5">
+    <div className="relative">
+      {/* Full-Bleed Atmospheric UP Election Home Background Layer */}
+      {!bgImgError && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none"
+        >
+          <img
+            src={UP_MONTAGE_ART}
+            alt=""
+            referrerPolicy="no-referrer"
+            onError={() => setBgImgError(true)}
+            className="w-full h-full object-cover object-center scale-105 opacity-[0.16] dark:opacity-[0.24] saturate-125"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#FAF6EE]/86 via-[#FAF6EE]/78 to-[#FAF6EE]/94 dark:from-[#050B1A]/86 dark:via-[#08132E]/78 dark:to-[#050B1A]/94" />
+          <div className="absolute inset-0 up-desi-jaali opacity-60" />
+        </div>
+      )}
+
+      <div className="relative z-10 space-y-5">
       {/* Legal Blackout Banner (Section 126 RP Act) */}
       {electionConfig.blackoutActive && (
         <div className="rounded-2xl bg-amber-50/95 dark:bg-amber-950/75 backdrop-blur-md border border-amber-300 dark:border-amber-700/60 p-4 flex items-start gap-3">
@@ -105,25 +128,25 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           initial={{ opacity: 0, y: 12, rotateX: -3 }}
           animate={{ opacity: 1, y: 0, rotateX: 0 }}
           transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-3xl overflow-hidden bg-gradient-to-br from-[#08132E] via-[#0F2357] to-[#1D4ED8] text-white p-6 md:p-8 shadow-xl up-neon-rim up-neon-edge"
+          className="rounded-3xl overflow-hidden bg-gradient-to-br from-[#07112B]/96 via-[#0E2252]/95 to-[#1A43A8]/92 backdrop-blur-xl text-white p-5 sm:p-6 md:p-8 shadow-xl up-neon-rim up-neon-edge ring-1 ring-inset ring-white/10"
         >
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-            <div className="md:col-span-8 space-y-4">
-              <div className="flex items-center gap-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6 items-center">
+            <div className="md:col-span-8 space-y-3.5 sm:space-y-4">
+              <div className="flex items-center gap-3 sm:gap-3.5">
                 <img
-                  src="/assets/aistudio/1794928302559_c4924cfc.png"
-                  alt="UP Mandate Emblem"
+                  src={UP_MONTAGE_ART}
+                  alt="UP Mandate 2027 Emblem"
                   referrerPolicy="no-referrer"
-                  className="w-14 h-14 rounded-2xl object-cover shadow-md border border-amber-300/35 bg-white/5"
+                  className="w-13 h-13 sm:w-15 sm:h-15 rounded-2xl object-cover shadow-md border border-amber-300/50 bg-white/5 up-gold-rim shrink-0"
                 />
-                <div>
-                  <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight">
+                <div className="min-w-0">
+                  <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight truncate">
                     UP <span className="text-[#F59E0B] up-neon-text-gold">Mandate</span>
                   </h2>
-                  <p className="text-sm text-blue-100/90">{t.home.tagline}</p>
+                  <p className="text-xs sm:text-sm text-blue-100/90 truncate">{t.home.tagline}</p>
                 </div>
               </div>
-              <p className="text-sm md:text-base text-blue-100 leading-relaxed max-w-2xl">
+              <p className="text-xs sm:text-sm md:text-base text-blue-100/95 leading-relaxed max-w-2xl">
                 {t.home.splashDesc}
               </p>
               <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 pt-1">
@@ -189,19 +212,19 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       )}
 
       {/* Top Desktop Grid: User Profile + 3 KPIs */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 up-stage-3d">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4 up-stage-3d">
         {/* User Identity & Cloud Sync Card */}
-        <div className="lg:col-span-5 rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/25 dark:border-cyan-400/20 p-4 sm:p-5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4 up-md3-elev-1 up-card-3d">
+        <div className="lg:col-span-5 rounded-2xl up-glass-surface border border-amber-500/25 dark:border-cyan-400/20 ring-1 ring-inset ring-white/55 dark:ring-white/6 p-3.5 sm:p-5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4 up-md3-elev-1 up-card-3d">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             {userProfile?.photoURL ? (
               <img
                 src={userProfile.photoURL}
                 alt={userProfile.publicAlias}
                 referrerPolicy="no-referrer"
-                className="w-12 h-12 rounded-2xl object-cover border border-amber-300 dark:border-cyan-500/40 shrink-0"
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-cover border border-amber-300 dark:border-cyan-500/40 shrink-0"
               />
             ) : (
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FF9933] via-[#1D4ED8] to-[#0F2766] text-white font-display font-bold text-base flex items-center justify-center shrink-0 shadow-sm">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#FF9933] via-[#1D4ED8] to-[#0F2766] text-white font-display font-bold text-sm sm:text-base flex items-center justify-center shrink-0 shadow-sm">
                 {initials || 'UP'}
               </div>
             )}
@@ -228,7 +251,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          <div className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/50 border border-amber-300/70 dark:border-amber-700/50 text-amber-800 dark:text-amber-300 text-xs font-semibold font-mono-num">
+          <div className="shrink-0 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/50 border border-amber-300/70 dark:border-amber-700/50 text-amber-800 dark:text-amber-300 text-xs font-semibold font-mono-num">
             <Crown className="w-3.5 h-3.5 text-amber-500" />
             <span>{userRankDisplay}</span>
           </div>
@@ -236,8 +259,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
         {/* 3 KPI Stat Cards */}
         <div className="lg:col-span-7 grid grid-cols-3 gap-2 sm:gap-4">
-          <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-amber-500/25 dark:border-amber-400/20 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
-            <div className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1.5 sm:mb-2">
+          <div className="rounded-2xl up-glass-surface border border-amber-500/25 dark:border-amber-400/20 ring-1 ring-inset ring-white/55 dark:ring-white/6 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1.5 sm:mb-2">
               <Trophy className="w-4 h-4" />
             </div>
             <div className="font-display font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white font-mono-num">
@@ -248,8 +271,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-emerald-500/25 dark:border-emerald-400/20 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
-            <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1.5 sm:mb-2">
+          <div className="rounded-2xl up-glass-surface border border-emerald-500/25 dark:border-emerald-400/20 ring-1 ring-inset ring-white/55 dark:ring-white/6 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1.5 sm:mb-2">
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <div className="font-display font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white font-mono-num">
@@ -260,8 +283,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/95 dark:bg-[#0C1732]/95 backdrop-blur-md border border-cyan-500/25 dark:border-cyan-400/20 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
-            <div className="w-9 h-9 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-1.5 sm:mb-2">
+          <div className="rounded-2xl up-glass-surface border border-cyan-500/25 dark:border-cyan-400/20 ring-1 ring-inset ring-white/55 dark:ring-white/6 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center up-md3-elev-1 up-card-3d">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-1.5 sm:mb-2">
               <Clock className="w-4 h-4" />
             </div>
             <div className="font-display font-extrabold text-sm sm:text-2xl text-slate-900 dark:text-white font-mono-num whitespace-nowrap">
@@ -274,88 +297,20 @@ export const HomeTab: React.FC<HomeTabProps> = ({
         </div>
       </div>
 
-      {/* 3D Animated Free Tier & ₹50 Lakh Winner Prizes Showcase */}
-      <div className="up-stage-3d">
-        <motion.div
-          animate={{ rotateX: prizeTilt.rotateX, rotateY: prizeTilt.rotateY }}
-          transition={{ type: 'spring', stiffness: 210, damping: 22 }}
-          onPointerMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const nx = (e.clientX - rect.left) / rect.width - 0.5;
-            const ny = (e.clientY - rect.top) / rect.height - 0.5;
-            setPrizeTilt({ rotateX: -ny * 4, rotateY: nx * 5 });
-          }}
-          onPointerLeave={() => setPrizeTilt({ rotateX: 0, rotateY: 0 })}
-          style={{ transformStyle: 'preserve-3d' }}
-          className="rounded-3xl bg-gradient-to-r from-[#091534] via-[#12265B] to-[#0E3168] text-white p-5 sm:p-6 up-gold-rim up-neon-edge up-neon-shimmer relative overflow-hidden"
-        >
-          {/* Subtle Ashoka Chakra & UP Architectural Linework Motif */}
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 120 120"
-            className="absolute -right-6 -top-6 w-40 h-40 text-amber-300/10 pointer-events-none select-none"
-            fill="none"
-          >
-            <circle cx="60" cy="60" r="46" stroke="currentColor" strokeWidth="1.5" />
-            <circle cx="60" cy="60" r="34" stroke="currentColor" strokeWidth="1" strokeDasharray="3 4" />
-            <circle cx="60" cy="60" r="8" stroke="currentColor" strokeWidth="1.5" />
-            {Array.from({ length: 12 }).map((_, idx) => {
-              const deg = idx * 30;
-              return (
-                <line
-                  key={deg}
-                  x1="60"
-                  y1="14"
-                  x2="60"
-                  y2="106"
-                  stroke="currentColor"
-                  strokeWidth="0.9"
-                  transform={`rotate(${deg} 60 60)`}
-                />
-              );
-            })}
-          </svg>
+      {/* 3D Animated Free Tier & ₹50 Lakh Winner Prizes Showcase with Moving 3D Blue Line */}
+      <PrizeShowcaseCard
+        badgeFree={t.rewards.badgeFree}
+        prizeSub={t.rewards.prizeSub}
+        title={t.rewards.title}
+        desc={t.rewards.desc}
+        prizeAmount={t.rewards.prizeAmount}
+        headline={t.rewards.headline}
+        ctaLabel={t.rewards.ctaLeaderboard}
+        onCtaClick={() => onNavigate('leaderboard', 'leaderboard')}
+        variant="hero"
+      />
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-            <div className="flex items-start gap-4" style={{ transform: 'translateZ(14px)' }}>
-              <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#FF9933] via-[#F59E0B] to-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-lg up-float-3d">
-                <Gift className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-amber-300 font-semibold">
-                  <span>{t.rewards.badgeFree}</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="text-cyan-300">{t.rewards.prizeSub}</span>
-                </div>
-                <h3 className="font-display font-extrabold text-lg sm:text-xl text-white tracking-tight">
-                  {t.rewards.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-blue-100/90 max-w-2xl leading-relaxed">
-                  {t.rewards.desc}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0" style={{ transform: 'translateZ(18px)' }}>
-              <div className="px-4 py-2 rounded-xl bg-white/10 border border-amber-300/40 text-center">
-                <div className="font-display font-extrabold text-lg text-[#F59E0B] font-mono-num up-neon-text-gold">
-                  {t.rewards.prizeAmount}
-                </div>
-                <div className="text-[10px] text-blue-100">{t.rewards.headline}</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => onNavigate('leaderboard', 'leaderboard')}
-                className="px-4 py-3 min-h-[44px] rounded-xl bg-gradient-to-r from-[#FF9933] to-[#F59E0B] hover:from-amber-400 hover:to-amber-500 text-slate-950 font-display font-extrabold text-xs sm:text-sm up-md3-ripple cursor-pointer whitespace-nowrap"
-              >
-                {t.rewards.ctaLeaderboard}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Main Forecast Hero (Vidhan Bhawan & Rumi Darwaza Twilight) + Current Allocation Split */}
+      {/* Main Forecast Hero: UP Election 2027 3D Montage & Vidhan Bhawan Twilight + Seat Allocation */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch up-stage-3d">
         <motion.div
           animate={{ rotateX: heroTilt.rotateX, rotateY: heroTilt.rotateY }}
@@ -368,24 +323,33 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           }}
           onPointerLeave={() => setHeroTilt({ rotateX: 0, rotateY: 0 })}
           style={{ transformStyle: 'preserve-3d' }}
-          className="lg:col-span-7 rounded-3xl bg-[#08132E] text-white p-6 sm:p-7 relative overflow-hidden up-neon-rim up-neon-pulse up-neon-edge flex flex-col justify-between min-h-[300px]"
+          className="lg:col-span-7 rounded-3xl bg-[#08132E] text-white p-6 sm:p-7 relative overflow-hidden up-neon-rim up-neon-pulse up-neon-edge flex flex-col justify-between min-h-[320px]"
         >
-          {/* UP Vidhan Bhawan & Rumi Darwaza Twilight Backdrop */}
+          {/* Montage Backdrop Layer 1: UP Vidhan Bhawan Twilight */}
           <img
             src={upVidhanTwilightImg}
             alt="Uttar Pradesh Vidhan Bhawan and Rumi Darwaza at Twilight"
             referrerPolicy="no-referrer"
-            className="absolute inset-0 w-full h-full object-cover object-center opacity-75 pointer-events-none select-none"
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-55 pointer-events-none select-none"
           />
+          {/* Montage Backdrop Layer 2: User's UP Election 2027 Artwork blended cleanly into right side */}
+          <img
+            src={UP_MONTAGE_ART}
+            alt=""
+            aria-hidden="true"
+            referrerPolicy="no-referrer"
+            className="absolute right-0 inset-y-0 w-3/4 h-full object-cover object-center opacity-30 mix-blend-screen pointer-events-none select-none"
+          />
+          {/* Measured 4.5:1 Scrim Overlay */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-r from-[#050B1A]/95 via-[#091534]/82 to-[#091534]/45"
+            className="absolute inset-0 bg-gradient-to-r from-[#050B1A]/95 via-[#091534]/85 to-[#091534]/55"
           />
           {/* Subtle Rumi Darwaza Arch Silhouette SVG Ornament */}
           <svg
             aria-hidden="true"
             viewBox="0 0 180 180"
-            className="hidden sm:block absolute right-3 bottom-0 w-40 h-40 text-amber-300/15 pointer-events-none select-none"
+            className="hidden sm:block absolute left-1/2 -translate-x-1/2 bottom-0 w-44 h-44 text-amber-300/12 pointer-events-none select-none"
             fill="none"
           >
             <path
@@ -402,40 +366,82 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           </svg>
           <div className="up-tiranga-bar absolute top-0 inset-x-0 opacity-95" aria-hidden="true" />
 
-          <div className="relative z-10 space-y-3 pt-1" style={{ transform: 'translateZ(18px)' }}>
-            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-amber-300">
-              <span>{t.home.forecastTag}</span>
-              <span aria-hidden="true">·</span>
-              <span className="text-cyan-300">
-                {language === 'hi'
-                  ? 'उत्तर प्रदेश · 75 जिले · 403 सीटें'
-                  : 'Awadh to Purvanchal · 75 Districts'}
-              </span>
-            </div>
-            <h1 className="font-display text-2xl sm:text-4xl font-extrabold leading-tight max-w-lg text-balance drop-shadow-sm">
-              {t.home.heroTitle}
-            </h1>
-            <p className="text-sm text-blue-100 max-w-md leading-relaxed">
-              {t.home.heroDesc}
-            </p>
-          </div>
+          {/* Split Interior: Left Editorial Copy + Actions / Right 3D Tilting Montage Showcase */}
+          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-12 gap-5 items-center flex-1 pt-2">
+            {/* Mobile-first visual centerpiece appears sleekly on top on small phones, right on sm+ */}
+            <div className="sm:col-span-7 order-2 sm:order-1 flex flex-col justify-between h-full space-y-4">
+              <div className="space-y-2.5 sm:space-y-3" style={{ transform: 'translateZ(18px)' }}>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold text-amber-300">
+                  <span>{t.home.forecastTag}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="text-cyan-300">
+                    {language === 'hi'
+                      ? 'उत्तर प्रदेश · 75 जिले · 403 सीटें'
+                      : 'Awadh to Purvanchal · 75 Districts'}
+                  </span>
+                </div>
+                <h1 className="font-display text-2xl sm:text-3xl xl:text-4xl font-extrabold leading-tight text-balance drop-shadow-sm">
+                  {t.home.heroTitle}
+                </h1>
+                <p className="text-xs sm:text-sm text-blue-100/95 leading-relaxed max-w-md">
+                  {t.home.heroDesc}
+                </p>
+              </div>
 
-          <div className="relative z-10 pt-6 flex flex-wrap items-center gap-3" style={{ transform: 'translateZ(24px)' }}>
-            <button
-              type="button"
-              onClick={() => onNavigate('parties')}
-              className="inline-flex items-center gap-2 px-5 py-3 min-h-[44px] rounded-xl bg-gradient-to-r from-[#FF9933] to-[#F59E0B] hover:from-amber-400 hover:to-amber-500 text-slate-950 font-display font-extrabold text-sm transition-colors up-gold-rim up-md3-ripple cursor-pointer whitespace-nowrap"
+              <div
+                className="flex flex-col xs:flex-row sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 pt-1"
+                style={{ transform: 'translateZ(24px)' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => onNavigate('parties')}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] rounded-xl bg-gradient-to-r from-[#FF9933] to-[#F59E0B] hover:from-amber-400 hover:to-amber-500 text-slate-950 font-display font-extrabold text-sm transition-colors up-gold-rim up-md3-ripple cursor-pointer whitespace-nowrap"
+                >
+                  <span>{t.home.predictSeatsNow}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('constituencies')}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-sm border border-cyan-300/35 backdrop-blur-xs transition-colors up-md3-ripple cursor-pointer whitespace-nowrap"
+                >
+                  <span>{t.home.browse403Seats}</span>
+                </button>
+                <PWAInstallButton language={language} compact />
+              </div>
+            </div>
+
+            {/* Right 3D Layered Montage Showcase (User Image + Vidhan Bhawan Accent) */}
+            <div
+              className="sm:col-span-5 order-1 sm:order-2 flex items-center justify-center sm:justify-end py-1"
+              style={{ transform: 'translateZ(28px)' }}
             >
-              <span>{t.home.predictSeatsNow}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('constituencies')}
-              className="inline-flex items-center gap-2 px-4 py-3 min-h-[44px] rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-sm border border-cyan-300/35 backdrop-blur-xs transition-colors up-md3-ripple cursor-pointer whitespace-nowrap"
-            >
-              <span>{t.home.browse403Seats}</span>
-            </button>
+              <div className="relative w-36 h-36 sm:w-46 sm:h-46 lg:w-52 lg:h-52">
+                {/* Back Tilted Vidhan Bhawan Card */}
+                <div className="absolute -right-2.5 -bottom-2.5 w-full h-full rounded-3xl overflow-hidden border border-cyan-400/50 rotate-6 opacity-80 shadow-xl up-neon-cyan">
+                  <img
+                    src={upVidhanTwilightImg}
+                    alt=""
+                    aria-hidden="true"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* Primary 3D Floating UP Election Artwork Card */}
+                <div className="relative w-full h-full rounded-3xl overflow-hidden border border-amber-300/60 bg-[#0B1736] shadow-2xl up-gold-rim up-neon-edge -rotate-2 hover:rotate-0 transition-transform duration-300 up-float-3d">
+                  <img
+                    src={UP_MONTAGE_ART}
+                    alt="Uttar Pradesh Assembly Election 2027 Montage"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 bg-gradient-to-t from-[#050B1A]/35 via-transparent to-white/10 pointer-events-none"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -630,6 +636,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             {t.home.legalScoringBtn}
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

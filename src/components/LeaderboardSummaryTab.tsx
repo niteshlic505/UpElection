@@ -5,7 +5,6 @@ import {
   Clock,
   CloudCheck,
   Crown,
-  Gift,
   Info,
   PieChart as PieIcon,
   ShieldCheck,
@@ -26,6 +25,7 @@ import {
 import { TOTAL_UP_SEATS, getBandByStart, getBandDisplaySeats, getPartyColor } from '../data/upParties';
 import { TRANSLATIONS } from '../i18n/translations';
 import { ChartSegment, DoughnutChart3D } from './DoughnutChart3D';
+import { PrizeShowcaseCard } from './PrizeShowcaseCard';
 
 interface LeaderboardSummaryTabProps {
   initialSubView: 'leaderboard' | 'summary';
@@ -211,25 +211,14 @@ export const LeaderboardSummaryTab: React.FC<LeaderboardSummaryTabProps> = ({
         </div>
       </div>
 
-      {/* Free Tier ₹50 Lakh Winner Prizes Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-[#091534] via-[#12265B] to-[#0E3168] text-white p-4 sm:p-5 up-gold-rim up-neon-edge up-neon-shimmer flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FF9933] to-[#F59E0B] text-slate-950 flex items-center justify-center shrink-0 up-float-3d">
-            <Gift className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-amber-300">
-              {rT.badgeFree} · {rT.prizeSub}
-            </div>
-            <h3 className="font-display font-bold text-sm sm:text-base text-white">
-              {rT.title}
-            </h3>
-          </div>
-        </div>
-        <div className="font-display font-extrabold text-xl text-[#F59E0B] font-mono-num up-neon-text-gold shrink-0">
-          {rT.prizeAmount}
-        </div>
-      </div>
+      {/* Free Tier ₹50 Lakh Winner Prizes Banner with 3D Neon Blue Line */}
+      <PrizeShowcaseCard
+        badgeFree={rT.badgeFree}
+        prizeSub={rT.prizeSub}
+        title={rT.title}
+        prizeAmount={rT.prizeAmount}
+        variant="compact"
+      />
 
       {subView === 'leaderboard' ? (
         <div className="space-y-5">
@@ -270,24 +259,24 @@ export const LeaderboardSummaryTab: React.FC<LeaderboardSummaryTabProps> = ({
                 {t.emptyOpenBoard}
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 items-end up-stage-3d">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-3 items-end up-stage-3d">
                 {/* #2 */}
                 <motion.div
                   initial={{ opacity: 0, y: 16, rotateX: -8 }}
                   animate={{ opacity: 1, y: 0, rotateX: 0 }}
                   transition={{ duration: 0.25, delay: 0.05 }}
-                  className="rounded-2xl bg-white/10 border border-cyan-300/25 p-3 sm:p-4 text-center up-card-3d"
+                  className="rounded-2xl bg-white/10 border border-cyan-300/25 p-2.5 sm:p-4 text-center up-card-3d min-w-0"
                 >
                   {topThree[1] ? (
                     <>
-                      <div className="w-11 h-11 rounded-full bg-slate-200 text-slate-900 font-display font-bold text-sm flex items-center justify-center mx-auto mb-2">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-200 text-slate-900 font-display font-bold text-xs sm:text-sm flex items-center justify-center mx-auto mb-1.5 sm:mb-2">
                         {getInitials(topThree[1].publicAlias)}
                       </div>
-                      <div className="text-xs font-bold text-cyan-300 font-mono-num">#2</div>
-                      <div className="font-display font-bold text-xs sm:text-sm text-white truncate mt-0.5">
+                      <div className="text-[11px] sm:text-xs font-bold text-cyan-300 font-mono-num">#2</div>
+                      <div className="font-display font-bold text-[11px] sm:text-sm text-white truncate mt-0.5">
                         {topThree[1].publicAlias}
                       </div>
-                      <div className="text-xs text-[#F59E0B] font-mono-num font-bold mt-1">
+                      <div className="text-[10px] sm:text-xs text-[#F59E0B] font-mono-num font-bold mt-1 truncate">
                         {(topThree[1].officialPoints || topThree[1].civicScore).toLocaleString()} pts
                       </div>
                     </>
@@ -301,19 +290,19 @@ export const LeaderboardSummaryTab: React.FC<LeaderboardSummaryTabProps> = ({
                   initial={{ opacity: 0, y: 20, rotateX: -8 }}
                   animate={{ opacity: 1, y: 0, rotateX: 0 }}
                   transition={{ duration: 0.28 }}
-                  className="rounded-2xl bg-gradient-to-b from-amber-500/25 to-amber-600/10 border border-amber-400/65 p-4 sm:p-5 text-center up-gold-rim up-card-3d"
+                  className="rounded-2xl bg-gradient-to-b from-amber-500/25 to-amber-600/10 border border-amber-400/65 p-3 sm:p-5 text-center up-gold-rim up-card-3d min-w-0"
                 >
                   {topThree[0] ? (
                     <>
-                      <Crown className="w-5 h-5 text-[#F59E0B] mx-auto mb-1.5" />
-                      <div className="w-12 h-12 rounded-full bg-[#F59E0B] text-slate-950 font-display font-extrabold text-sm flex items-center justify-center mx-auto mb-2 shadow-md">
+                      <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-[#F59E0B] mx-auto mb-1 sm:mb-1.5" />
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#F59E0B] text-slate-950 font-display font-extrabold text-xs sm:text-sm flex items-center justify-center mx-auto mb-1.5 sm:mb-2 shadow-md">
                         {getInitials(topThree[0].publicAlias)}
                       </div>
-                      <div className="text-xs font-bold text-[#F59E0B] font-mono-num">#1</div>
-                      <div className="font-display font-bold text-sm sm:text-base text-white truncate mt-0.5">
+                      <div className="text-[11px] sm:text-xs font-bold text-[#F59E0B] font-mono-num">#1</div>
+                      <div className="font-display font-bold text-xs sm:text-base text-white truncate mt-0.5">
                         {topThree[0].publicAlias}
                       </div>
-                      <div className="text-xs sm:text-sm text-white font-mono-num font-bold mt-1">
+                      <div className="text-[11px] sm:text-sm text-white font-mono-num font-bold mt-1 truncate">
                         {(topThree[0].officialPoints || topThree[0].civicScore).toLocaleString()} pts
                       </div>
                     </>
@@ -327,18 +316,18 @@ export const LeaderboardSummaryTab: React.FC<LeaderboardSummaryTabProps> = ({
                   initial={{ opacity: 0, y: 16, rotateX: -8 }}
                   animate={{ opacity: 1, y: 0, rotateX: 0 }}
                   transition={{ duration: 0.25, delay: 0.1 }}
-                  className="rounded-2xl bg-white/10 border border-amber-300/25 p-3 sm:p-4 text-center up-card-3d"
+                  className="rounded-2xl bg-white/10 border border-amber-300/25 p-2.5 sm:p-4 text-center up-card-3d min-w-0"
                 >
                   {topThree[2] ? (
                     <>
-                      <div className="w-11 h-11 rounded-full bg-amber-700 text-white font-display font-bold text-sm flex items-center justify-center mx-auto mb-2">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-amber-700 text-white font-display font-bold text-xs sm:text-sm flex items-center justify-center mx-auto mb-1.5 sm:mb-2">
                         {getInitials(topThree[2].publicAlias)}
                       </div>
-                      <div className="text-xs font-bold text-amber-300 font-mono-num">#3</div>
-                      <div className="font-display font-bold text-xs sm:text-sm text-white truncate mt-0.5">
+                      <div className="text-[11px] sm:text-xs font-bold text-amber-300 font-mono-num">#3</div>
+                      <div className="font-display font-bold text-[11px] sm:text-sm text-white truncate mt-0.5">
                         {topThree[2].publicAlias}
                       </div>
-                      <div className="text-xs text-[#F59E0B] font-mono-num font-bold mt-1">
+                      <div className="text-[10px] sm:text-xs text-[#F59E0B] font-mono-num font-bold mt-1 truncate">
                         {(topThree[2].officialPoints || topThree[2].civicScore).toLocaleString()} pts
                       </div>
                     </>
