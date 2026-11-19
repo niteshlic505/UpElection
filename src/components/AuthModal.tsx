@@ -133,7 +133,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setRecaptchaLoading(true);
 
       try {
-        auth.languageCode = language === 'hi' ? 'hi' : 'en';
+        // Use standard ASCII English SMS template for highest Indian telecom (Jio/Airtel/Vi/BSNL) delivery rate
+        auth.languageCode = 'en';
         const widgetNode = document.createElement('div');
         recaptchaMountRef.current.appendChild(widgetNode);
         const verifier = new RecaptchaVerifier(auth, widgetNode, {
@@ -317,7 +318,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const e164Phone = `${countryCode}${cleanDigits}`;
     setSendingOtp(true);
     try {
-      auth.languageCode = language === 'hi' ? 'hi' : 'en';
+      // Standard GSM-7 English SMS avoids Unicode SMS filtering on Indian carriers (BSNL/Vi/MNP)
+      auth.languageCode = 'en';
 
       let verifier = verifierRef.current;
       if (recaptchaMode === 'invisible' || !verifier) {
@@ -595,12 +597,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       autoComplete="tel-national"
                       maxLength={20}
                       value={phoneDigits}
-                      onChange={(e) => setPhoneDigits(e.target.value.replace(/[^\d+\s()-]/g, ''))}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^\d+\s()-]/g, '');
+                        const normalized = normalizePhoneDigits(cleaned, countryCode);
+                        setPhoneDigits(
+                          countryCode === '+91' && normalized.length === 10 ? normalized : cleaned,
+                        );
+                      }}
                       placeholder={t.mobilePlaceholder}
                       className="w-full min-h-[44px] pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-base sm:text-sm font-mono-num font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                     />
                   </div>
                 </div>
+                {(() => {
+                  const previewDigits = normalizePhoneDigits(phoneDigits, countryCode);
+                  if (previewDigits.length < 7) return null;
+                  return (
+                    <div className="mt-1 text-[11px] font-mono-num text-slate-500 dark:text-cyan-300/90">
+                      {language === 'hi' ? 'OTP इस नंबर पर भेजा जाएगा:' : 'OTP will be sent to:'}{' '}
+                      <strong className="text-slate-800 dark:text-white">
+                        {countryCode}
+                        {previewDigits}
+                      </strong>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div>
@@ -760,6 +781,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                           : 'If this number is listed in Firebase Console → Phone → "Phone numbers for testing", Firebase suppresses real SMS and only accepts the configured test code.'}
                       </li>
                     </ul>
+                    <a
+                      href={`https://console.firebase.google.com/project/${firebaseConfig.projectId}/authentication/providers`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 pt-1 text-[11px] font-bold text-blue-700 dark:text-cyan-300 hover:underline"
+                    >
+                      <span>
+                        {language === 'hi'
+                          ? 'Firebase Phone सेटिंग्स खोलें'
+                          : 'Check Firebase Phone Auth Settings'}
+                      </span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
                 )}
               </div>
