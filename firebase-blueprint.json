@@ -11,6 +11,13 @@
           "maxLength": 128,
           "pattern": "^[a-zA-Z0-9_\\-]+$"
         },
+        "uniqueUserId": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 12,
+          "pattern": "^UPM-[A-Z0-9]{8}$",
+          "description": "Permanent alphanumeric unique identification number displayed on the anonymous public leaderboard."
+        },
         "displayName": {
           "type": "string",
           "minLength": 1,
@@ -139,7 +146,7 @@
     },
     "LeaderboardEntry": {
       "title": "LeaderboardEntry",
-      "description": "Publicly visible non-PII forecaster ranking entry eligible for the free ₹50 Lakh prizes & gifts pool.",
+      "description": "Strictly anonymized public forecaster ranking & community vote entry identified ONLY by uniqueUserId (never real names).",
       "type": "object",
       "properties": {
         "uid": {
@@ -148,10 +155,18 @@
           "maxLength": 128,
           "pattern": "^[a-zA-Z0-9_\\-]+$"
         },
+        "uniqueUserId": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 12,
+          "pattern": "^UPM-[A-Z0-9]{8}$"
+        },
         "publicAlias": {
           "type": "string",
-          "minLength": 2,
-          "maxLength": 40
+          "minLength": 12,
+          "maxLength": 12,
+          "pattern": "^UPM-[A-Z0-9]{8}$",
+          "description": "Mirrors uniqueUserId strictly so no real name is ever persisted in public collections."
         },
         "optIn": {
           "type": "boolean"
@@ -163,6 +178,18 @@
           "type": "integer"
         },
         "partyAllocated": {
+          "type": "integer"
+        },
+        "allianceAllocated": {
+          "type": "integer"
+        },
+        "partyPredictionCount": {
+          "type": "integer"
+        },
+        "alliancePredictionCount": {
+          "type": "integer"
+        },
+        "predictionPoints": {
           "type": "integer"
         },
         "civicScore": {
@@ -177,12 +204,27 @@
         "correctPartyBands": {
           "type": "integer"
         },
+        "correctAllianceBands": {
+          "type": "integer"
+        },
+        "partyBands": {
+          "type": "object",
+          "description": "Anonymized party seat band selections for live community vote tallies."
+        },
+        "allianceBands": {
+          "type": "object",
+          "description": "Anonymized alliance seat band selections for live community vote tallies."
+        },
+        "constituencyVotes": {
+          "type": "object",
+          "description": "Anonymized compact map of AC number to 'Candidate Name|PARTY' for live community vote tallies."
+        },
         "updatedAt": {
           "type": "string",
           "format": "date-time"
         }
       },
-      "required": ["uid", "publicAlias", "optIn", "completionPercent", "completedSeats", "partyAllocated", "civicScore", "officialPoints", "correctConstituencies", "correctPartyBands", "updatedAt"]
+      "required": ["uid", "uniqueUserId", "publicAlias", "optIn", "completionPercent", "completedSeats", "partyAllocated", "civicScore", "officialPoints", "correctConstituencies", "correctPartyBands", "updatedAt"]
     },
     "Party": {
       "title": "Party",

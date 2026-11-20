@@ -115,6 +115,7 @@ export interface UserPredictionData {
 
 export interface UserProfileData {
   uid: string;
+  uniqueUserId?: string;
   displayName: string;
   publicAlias: string;
   email?: string;
@@ -131,16 +132,25 @@ export interface UserProfileData {
 
 export interface LeaderboardEntry {
   uid: string;
+  uniqueUserId?: string;
   publicAlias: string;
   optIn: boolean;
   membershipTier?: 'PRO' | 'PREMIUM';
   completionPercent: number;
   completedSeats: number;
   partyAllocated: number;
+  allianceAllocated?: number;
+  partyPredictionCount?: number;
+  alliancePredictionCount?: number;
+  predictionPoints?: number;
   civicScore: number;
   officialPoints: number;
   correctConstituencies: number;
   correctPartyBands: number;
+  correctAllianceBands?: number;
+  partyBands?: Record<string, number>;
+  allianceBands?: Record<string, number>;
+  constituencyVotes?: Record<string, string>;
   updatedAt?: unknown;
 }
 

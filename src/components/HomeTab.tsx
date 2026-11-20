@@ -26,11 +26,12 @@ import {
 } from '../types/election';
 import { TOTAL_UP_SEATS, getBandByStart, getBandDisplaySeats } from '../data/upParties';
 import { TRANSLATIONS } from '../i18n/translations';
+import { getPublicContestantId } from '../utils/uniqueId';
 import upVidhanTwilightImg from '../assets/images/up_vidhan_twilight_1794969822354.jpg';
 import { PWAInstallButton } from './PWAInstallButton';
 import { PrizeShowcaseCard } from './PrizeShowcaseCard';
 
-const UP_MONTAGE_ART = '/assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg';
+const UP_MONTAGE_ART = './assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg';
 
 interface HomeTabProps {
   userProfile: UserProfileData | null;
@@ -229,10 +230,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               </div>
             )}
             <div className="min-w-0">
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-wrap">
                 <h2 className="font-display font-bold text-base sm:text-lg text-slate-900 dark:text-white truncate">
                   {isSignedIn ? userProfile?.publicAlias || userProfile?.displayName : t.auth.guestCitizen}
                 </h2>
+                {isSignedIn && userProfile && (
+                  <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-cyan-500/40 text-[10px] font-mono-num font-extrabold text-blue-700 dark:text-cyan-300 shrink-0">
+                    ID: {getPublicContestantId(userProfile)}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                 <CheckCircle2

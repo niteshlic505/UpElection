@@ -86,6 +86,16 @@ import {
 } from './data/upAlliances';
 import { UP_403_CONSTITUENCIES } from './data/upConstituencies403';
 import { parseSeatsCsv } from './utils/csvParser';
+import { generateUniqueUserId } from './utils/uniqueId';
+import {
+  calculateOfficialAccuracy,
+  calculatePredictionPoints,
+  getEntryTotalPoints,
+} from './utils/scoring';
+import {
+  buildCommunityVotesAggregate,
+  serializeConstituencyVotes,
+} from './utils/communityVotes';
 import { HomeTab } from './components/HomeTab';
 import { PartyPredictionTab } from './components/PartyPredictionTab';
 import { AlliancePredictionTab } from './components/AlliancePredictionTab';
@@ -326,9 +336,12 @@ export default function App() {
           ).slice(0, 40);
           const validAlias = defaultAlias.length >= 2 ? defaultAlias : 'UP Citizen';
 
+          const assignedUniqueId = generateUniqueUserId(user.uid);
+
           if (!userSnap.exists()) {
             const newProfile: Record<string, unknown> = {
               uid: user.uid,
+              uniqueUserId: assignedUniqueId,
               displayName: rawFallbackName.slice(0, 80),
               publicAlias: validAlias,
               authProvider,
@@ -346,6 +359,7 @@ export default function App() {
             await setDoc(userRef, newProfile);
             setUserProfile({
               uid: user.uid,
+              uniqueUserId: assignedUniqueId,
               displayName: String(newProfile.displayName),
               publicAlias: validAlias,
               email: user.email || undefined,
@@ -358,23 +372,36 @@ export default function App() {
             });
           } else {
             const data = userSnap.data() as UserProfileData;
-            if (cleanPreferred && cleanPreferred.length >= 2 && data.displayName !== cleanPreferred) {
-              const updatedAlias = cleanPreferred.slice(0, 40);
-              await updateDoc(userRef, {
-                displayName: cleanPreferred,
-                publicAlias: updatedAlias,
+            const resolvedUniqueId = data.uniqueUserId || assignedUniqueId;
+            const needsUniqueIdBackfill = !data.uniqueUserId;
+            const needsNameUpdate =
+              Boolean(cleanPreferred && cleanPreferred.length >= 2 && data.displayName !== cleanPreferred);
+
+            if (needsNameUpdate || needsUniqueIdBackfill) {
+              const patch: Record<string, unknown> = {
                 updatedAt: serverTimestamp(),
-              });
+              };
+              if (needsUniqueIdBackfill) {
+                patch.uniqueUserId = resolvedUniqueId;
+              }
+              if (needsNameUpdate && cleanPreferred) {
+                patch.displayName = cleanPreferred;
+                patch.publicAlias = cleanPreferred.slice(0, 40);
+              }
+              await updateDoc(userRef, patch);
               setUserProfile({
                 ...data,
-                displayName: cleanPreferred,
-                publicAlias: updatedAlias,
+                uniqueUserId: resolvedUniqueId,
+                displayName: needsNameUpdate && cleanPreferred ? cleanPreferred : data.displayName,
+                publicAlias:
+                  needsNameUpdate && cleanPreferred ? cleanPreferred.slice(0, 40) : data.publicAlias,
                 phoneNumber: data.phoneNumber || user.phoneNumber || undefined,
                 authProvider: data.authProvider || authProvider,
               });
             } else {
               setUserProfile({
                 ...data,
+                uniqueUserId: resolvedUniqueId,
                 phoneNumber: data.phoneNumber || user.phoneNumber || undefined,
                 authProvider: data.authProvider || authProvider,
               });
@@ -390,6 +417,7 @@ export default function App() {
             ).slice(0, 40);
             setUserProfile({
               uid: user.uid,
+              uniqueUserId: generateUniqueUserId(user.uid),
               displayName: (cleanPreferred || user.displayName || 'Citizen').slice(0, 80),
               publicAlias: fallbackAlias.length >= 2 ? fallbackAlias : 'UP Citizen',
               email: user.email || undefined,
@@ -635,14 +663,45 @@ export default function App() {
     });
   }, [constituencyOverrides]);
 
-  // Derived civic points (non-monetary engagement score capped <= 1000)
+  // Exact contest scoring points: +1 per prediction (party, alliance, constituency) + official accuracy points (+5/+20/+50)
+  const predictionBreakdown = useMemo(
+    () =>
+      calculatePredictionPoints(
+        prediction.partyBands,
+        prediction.allianceBands,
+        prediction.constituencyPicks,
+      ),
+    [prediction.partyBands, prediction.allianceBands, prediction.constituencyPicks],
+  );
+
+  const myLeaderboardEntry = useMemo(
+    () => (firebaseUser ? leaderboard.find((e) => e.uid === firebaseUser.uid) : undefined),
+    [firebaseUser, leaderboard],
+  );
+
   const civicPoints = useMemo(() => {
-    const seatsCount = Object.keys(prediction.constituencyPicks).length;
-    const allocated = calculateAllocatedSeats(prediction.partyBands, parties);
-    const partyBonus = allocated === TOTAL_UP_SEATS ? 200 : allocated > 0 ? 100 : 0;
-    const submitBonus = prediction.isSubmitted ? 50 : 0;
-    return Math.min(1000, seatsCount * 2 + partyBonus + submitBonus);
-  }, [prediction, parties]);
+    const officialPts = myLeaderboardEntry?.officialPoints ?? 0;
+    return predictionBreakdown.predictionPoints + officialPts;
+  }, [predictionBreakdown.predictionPoints, myLeaderboardEntry]);
+
+  // Real-time community voting aggregate across all opted-in participants (+ current user's live picks)
+  const communityVotes = useMemo(
+    () =>
+      buildCommunityVotesAggregate(
+        leaderboard,
+        parties,
+        constituencies,
+        firebaseUser
+          ? {
+              uid: firebaseUser.uid,
+              partyBands: prediction.partyBands,
+              allianceBands: prediction.allianceBands,
+              constituencyPicks: prediction.constituencyPicks,
+            }
+          : undefined,
+      ),
+    [leaderboard, parties, constituencies, firebaseUser, prediction],
+  );
 
   // Persist helper (local cache + Firestore cloud sync)
   const persistPredictionToCloud = useCallback(
@@ -664,10 +723,6 @@ export default function App() {
       const safeAllocated = Math.min(TOTAL_UP_SEATS, Math.max(0, Math.round(nextPred.totalAllocated)));
       const safeCompleted = Math.min(TOTAL_UP_SEATS, Math.max(0, nextPred.completedCount));
       const safePercent = Math.min(100, Math.max(0, Math.round((safeCompleted / TOTAL_UP_SEATS) * 100)));
-      const safeCivicScore = Math.min(
-        1000,
-        safeCompleted * 2 + (safeAllocated === TOTAL_UP_SEATS ? 200 : safeAllocated > 0 ? 100 : 0) + (nextPred.isSubmitted ? 50 : 0),
-      );
 
       try {
         const existingPred = await getDoc(predRef);
@@ -764,31 +819,57 @@ export default function App() {
           });
         }
 
-        const alias = (userProfile?.publicAlias || activeUser.displayName || 'UP Citizen').slice(0, 40);
-        const safeAlias = alias.length >= 2 ? alias : 'UP Citizen';
+        const uniqueUserId = userProfile?.uniqueUserId || generateUniqueUserId(uid);
+        const ptsBreakdown = calculatePredictionPoints(
+          nextPred.partyBands,
+          alliancePayload,
+          enrichedPicks,
+        );
+        const safePredictionPoints = Math.min(450, Math.max(0, ptsBreakdown.predictionPoints));
+        const anonymizedConstituencyVotes = serializeConstituencyVotes(enrichedPicks);
+
         const existingLb = await getDoc(lbRef);
         if (!existingLb.exists()) {
           await setDoc(lbRef, {
             uid,
-            publicAlias: safeAlias,
+            uniqueUserId,
+            publicAlias: uniqueUserId,
             optIn: userProfile?.leaderboardOptIn ?? true,
             completionPercent: safePercent,
             completedSeats: safeCompleted,
             partyAllocated: safeAllocated,
-            civicScore: safeCivicScore,
+            allianceAllocated: safeAllianceAllocated,
+            partyPredictionCount: ptsBreakdown.partyPredictionCount,
+            alliancePredictionCount: ptsBreakdown.alliancePredictionCount,
+            predictionPoints: safePredictionPoints,
+            civicScore: safePredictionPoints,
             officialPoints: 0,
             correctConstituencies: 0,
             correctPartyBands: 0,
+            correctAllianceBands: 0,
+            partyBands: nextPred.partyBands,
+            allianceBands: alliancePayload,
+            constituencyVotes: anonymizedConstituencyVotes,
             updatedAt: serverTimestamp(),
           });
         } else {
+          const existingLbData = existingLb.data() as Partial<LeaderboardEntry>;
           await updateDoc(lbRef, {
-            publicAlias: safeAlias,
+            uniqueUserId: existingLbData.uniqueUserId || uniqueUserId,
+            publicAlias: existingLbData.uniqueUserId || uniqueUserId,
             optIn: userProfile?.leaderboardOptIn ?? true,
             completionPercent: safePercent,
             completedSeats: safeCompleted,
             partyAllocated: safeAllocated,
-            civicScore: safeCivicScore,
+            allianceAllocated: safeAllianceAllocated,
+            partyPredictionCount: ptsBreakdown.partyPredictionCount,
+            alliancePredictionCount: ptsBreakdown.alliancePredictionCount,
+            predictionPoints: safePredictionPoints,
+            civicScore: safePredictionPoints,
+            correctAllianceBands: existingLbData.correctAllianceBands ?? 0,
+            partyBands: nextPred.partyBands,
+            allianceBands: alliancePayload,
+            constituencyVotes: anonymizedConstituencyVotes,
             updatedAt: serverTimestamp(),
           });
         }
@@ -1001,6 +1082,7 @@ export default function App() {
   const handleUpdateProfile = async (alias: string, leaderboardOptIn: boolean) => {
     if (!firebaseUser) return;
     const safeAlias = alias.slice(0, 40);
+    const uniqueUserId = userProfile?.uniqueUserId || generateUniqueUserId(firebaseUser.uid);
     try {
       await updateDoc(doc(db, 'users', firebaseUser.uid), {
         publicAlias: safeAlias,
@@ -1010,14 +1092,17 @@ export default function App() {
       const lbRef = doc(db, 'leaderboard', firebaseUser.uid);
       const lbSnap = await getDoc(lbRef);
       if (lbSnap.exists()) {
+        const existingLbData = lbSnap.data() as Partial<LeaderboardEntry>;
+        const preservedId = existingLbData.uniqueUserId || uniqueUserId;
         await updateDoc(lbRef, {
-          publicAlias: safeAlias,
+          uniqueUserId: preservedId,
+          publicAlias: preservedId,
           optIn: leaderboardOptIn,
           updatedAt: serverTimestamp(),
         });
       }
       setUserProfile((prev) =>
-        prev ? { ...prev, publicAlias: safeAlias, leaderboardOptIn } : prev,
+        prev ? { ...prev, uniqueUserId, publicAlias: safeAlias, leaderboardOptIn } : prev,
       );
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `users/${firebaseUser.uid}`);
@@ -1190,59 +1275,81 @@ export default function App() {
       getDocs(collection(db, 'user_predictions')),
       getDocs(collection(db, 'leaderboard')),
     ]);
-    const lbIds = new Set(lbSnap.docs.map((d) => d.id));
+    const lbMap = new Map<string, Partial<LeaderboardEntry>>();
+    lbSnap.docs.forEach((d) => lbMap.set(d.id, d.data() as Partial<LeaderboardEntry>));
     const officialList = Object.values(officialResults).filter((r) => r.declared);
 
-    // Aggregate official seats won per party from declared ECI results
-    const officialPartySeats: Record<string, number> = {};
-    officialList.forEach((r) => {
-      const code = r.winnerParty.toUpperCase();
-      officialPartySeats[code] = (officialPartySeats[code] || 0) + 1;
-    });
-
     let count = 0;
-    const batch = writeBatch(db);
-    predsSnap.docs.forEach((d) => {
-      const p = d.data() as UserPredictionData;
-      let correctConst = 0;
-      officialList.forEach((res) => {
-        const pick = p.constituencyPicks?.[String(res.acNo)];
-        if (pick && pick.party.toUpperCase() === res.winnerParty.toUpperCase()) {
-          correctConst++;
-        }
-      });
+    const docsToProcess = predsSnap.docs;
+    const chunkSize = 200;
 
-      let correctBands = 0;
-      Object.entries(p.partyBands || {}).forEach(([partyCode, bandStart]) => {
-        const band = getBandByStart(bandStart);
-        const actual = officialPartySeats[partyCode.toUpperCase()] ?? 0;
-        if (actual >= band.start && actual <= band.end) {
-          correctBands++;
-        }
-      });
+    for (let i = 0; i < docsToProcess.length; i += chunkSize) {
+      const batch = writeBatch(db);
+      docsToProcess.slice(i, i + chunkSize).forEach((d) => {
+        const p = d.data() as UserPredictionData;
+        const existingLb = lbMap.get(d.id);
+        const uniqueUserId = existingLb?.uniqueUserId || generateUniqueUserId(d.id);
+        const ptsBreakdown = calculatePredictionPoints(
+          p.partyBands,
+          p.allianceBands,
+          p.constituencyPicks,
+        );
+        const accuracy = calculateOfficialAccuracy(
+          p.partyBands,
+          p.allianceBands,
+          p.constituencyPicks,
+          officialResults,
+        );
+        const safeAllocated = Math.min(TOTAL_UP_SEATS, Math.max(0, Math.round(p.totalAllocated ?? 0)));
+        const safeAllianceAllocated = Math.min(
+          TOTAL_UP_SEATS,
+          Math.max(0, Math.round(p.allianceAllocated ?? calculateAllianceAllocatedSeats(p.allianceBands || DEFAULT_ALLIANCE_BANDS))),
+        );
+        const safeCompleted = Math.min(
+          TOTAL_UP_SEATS,
+          Math.max(0, Object.keys(p.constituencyPicks || {}).length),
+        );
+        const safePercent = Math.min(100, Math.round((safeCompleted / TOTAL_UP_SEATS) * 100));
 
-      const completionBonus = p.completedCount >= TOTAL_UP_SEATS ? 50 : 0;
-      const officialPoints = correctConst * 10 + correctBands * 100 + completionBonus;
-
-      if (lbIds.has(d.id)) {
-        batch.update(doc(db, 'leaderboard', d.id), {
-          officialPoints,
-          correctConstituencies: correctConst,
-          correctPartyBands: correctBands,
+        batch.set(doc(db, 'leaderboard', d.id), {
+          uid: d.id,
+          uniqueUserId,
+          publicAlias: uniqueUserId,
+          optIn: existingLb?.optIn ?? true,
+          completionPercent: safePercent,
+          completedSeats: safeCompleted,
+          partyAllocated: safeAllocated,
+          allianceAllocated: safeAllianceAllocated,
+          partyPredictionCount: ptsBreakdown.partyPredictionCount,
+          alliancePredictionCount: ptsBreakdown.alliancePredictionCount,
+          predictionPoints: Math.min(450, ptsBreakdown.predictionPoints),
+          civicScore: Math.min(450, ptsBreakdown.predictionPoints),
+          officialPoints: Math.min(5000, accuracy.officialPoints),
+          correctConstituencies: accuracy.correctConstituencies,
+          correctPartyBands: accuracy.correctPartyBands,
+          correctAllianceBands: accuracy.correctAllianceBands,
+          partyBands: p.partyBands || DEFAULT_PARTY_BANDS,
+          allianceBands: p.allianceBands || DEFAULT_ALLIANCE_BANDS,
+          constituencyVotes: serializeConstituencyVotes(p.constituencyPicks || {}),
           updatedAt: serverTimestamp(),
         });
-      }
-      count++;
-    });
+        count++;
+      });
+      await batch.commit();
+    }
 
-    await batch.commit();
-    await logAdminAction('RECALCULATE_LEADERBOARD', `Scored ${count} users against ${officialList.length} ECI results`);
+    await logAdminAction(
+      'RECALCULATE_LEADERBOARD',
+      `Scored ${count} users (+5 candidate, +20 party ±10, +50 alliance ±10, +1/prediction) against ${officialList.length} ECI results`,
+    );
     return count;
   };
 
   const userRankDisplay = useMemo(() => {
-    if (!firebaseUser) return 'Top 10%';
-    const sorted = [...leaderboard].sort((a, b) => b.civicScore - a.civicScore);
+    if (!firebaseUser) return 'Contest';
+    const sorted = [...leaderboard].sort(
+      (a, b) => getEntryTotalPoints(b) - getEntryTotalPoints(a),
+    );
     const idx = sorted.findIndex((e) => e.uid === firebaseUser.uid);
     if (idx < 0 || sorted.length === 0) return 'Forecaster';
     return `Rank #${idx + 1}`;
@@ -1316,7 +1423,7 @@ export default function App() {
               className="flex items-center gap-2 sm:gap-2.5 cursor-pointer whitespace-nowrap min-w-0"
             >
               <img
-                src="/assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg"
+                src="./assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg"
                 alt="UP Mandate"
                 referrerPolicy="no-referrer"
                 className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shadow-md ring-1.5 ring-amber-300/80 shrink-0"
@@ -1527,6 +1634,7 @@ export default function App() {
             isSignedIn={Boolean(firebaseUser)}
             isSaving={isSaving}
             language={language}
+            communityVotes={communityVotes}
             onUpdatePartyBands={handleUpdatePartyBands}
             onGoogleSignIn={() => setAuthModalOpen(true)}
           />
@@ -1539,6 +1647,7 @@ export default function App() {
             isSignedIn={Boolean(firebaseUser)}
             isSaving={isSaving}
             language={language}
+            communityVotes={communityVotes}
             onUpdateAllianceBands={handleUpdateAllianceBands}
             onGoogleSignIn={() => setAuthModalOpen(true)}
           />
@@ -1554,6 +1663,7 @@ export default function App() {
             electionConfig={electionConfig}
             isSaving={isSaving}
             language={language}
+            communityVotes={communityVotes}
             onSelectCandidate={handleSelectCandidate}
           />
         )}
@@ -1569,6 +1679,7 @@ export default function App() {
             parties={parties}
             constituencies={constituencies}
             leaderboard={leaderboard}
+            communityVotes={communityVotes}
             electionConfig={electionConfig}
             countdownText={countdownText}
             civicPoints={civicPoints}

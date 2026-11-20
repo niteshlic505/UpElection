@@ -7,6 +7,7 @@ import {VitePWA} from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
   return {
+    base: './',
     plugins: [
       react(),
       tailwindcss(),
@@ -21,7 +22,7 @@ export default defineConfig(() => {
           'assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg',
         ],
         manifest: {
-          id: '/',
+          id: './',
           name: 'UP Mandate 2027 — Election Forecast',
           short_name: 'UP Mandate',
           description:
@@ -31,24 +32,24 @@ export default defineConfig(() => {
           display: 'standalone',
           display_override: ['standalone', 'fullscreen'],
           orientation: 'portrait-primary',
-          start_url: '/',
-          scope: '/',
+          start_url: './',
+          scope: './',
           categories: ['news', 'politics', 'social'],
           icons: [
             {
-              src: '/pwa-192x192.png',
+              src: 'pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-512x512.png',
+              src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-maskable-512x512.png',
+              src: 'pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
@@ -58,7 +59,7 @@ export default defineConfig(() => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff2}'],
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-          navigateFallback: '/index.html',
+          navigateFallback: 'index.html',
           navigateFallbackDenylist: [/^\/__/, /^\/ads\.txt$/, /^\/robots\.txt$/, /^\/sitemap\.xml$/],
           runtimeCaching: [
             {

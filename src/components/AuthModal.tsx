@@ -512,8 +512,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
               <div className="text-blue-100/90 text-[11px]">
                 {language === 'hi'
-                  ? 'मोबाइल OTP या Google से साइन अप / लॉगिन करें'
-                  : 'Sign up or log in securely with Mobile OTP or Google'}
+                  ? 'मोबाइल OTP या Google से साइन अप करें — आपको स्थायी अल्फ़ान्यूमेरिक यूनिक ID (UPM-XXXXXXXX) मिलेगी। आपका नाम कभी अन्य यूज़र्स को नहीं दिखेगा।'
+                  : 'Sign up with Mobile OTP or Google — you receive a permanent alphanumeric Unique ID (UPM-XXXXXXXX). Your name is never shown to other users.'}
               </div>
             </div>
           </div>
@@ -639,6 +639,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     className="w-full min-h-[44px] pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   />
                 </div>
+                <p className="mt-1 text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
+                  {language === 'hi'
+                    ? 'निजी — लीडरबोर्ड पर केवल आपकी यूनिक ID (UPM-XXXXXXXX) दिखाई देती है।'
+                    : 'Private — only your Unique ID (UPM-XXXXXXXX) is shown on the Leaderboard.'}
+                </p>
               </div>
 
               {errorMsg && (

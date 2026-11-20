@@ -10,7 +10,7 @@ interface LoadingScreenProps {
 }
 
 const LOADING_MONTAGE_SRC =
-  '/assets/aistudio/file_00000000237c82118a0413328d5b5651_3f0a24ea.png';
+  './assets/aistudio/file_00000000237c82118a0413328d5b5651_3f0a24ea.png';
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   visible,

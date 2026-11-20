@@ -49,7 +49,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'भारतीय जनता पार्टी',
     leaderEn: 'Yogi Adityanath',
     leaderHi: 'योगी आदित्यनाथ',
-    leaderPhotoUrl: '/assets/leaders/bjp.jpg',
+    leaderPhotoUrl: './assets/leaders/bjp.jpg',
   },
   SP: {
     shortEn: 'SP',
@@ -57,7 +57,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'समाजवादी पार्टी',
     leaderEn: 'Akhilesh Yadav',
     leaderHi: 'अखिलेश यादव',
-    leaderPhotoUrl: '/assets/leaders/sp.jpg',
+    leaderPhotoUrl: './assets/leaders/sp.jpg',
   },
   BSP: {
     shortEn: 'BSP',
@@ -65,7 +65,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'बहुजन समाज पार्टी',
     leaderEn: 'Mayawati',
     leaderHi: 'मायावती',
-    leaderPhotoUrl: '/assets/leaders/bsp.jpg',
+    leaderPhotoUrl: './assets/leaders/bsp.jpg',
   },
   INC: {
     shortEn: 'INC',
@@ -73,7 +73,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'भारतीय राष्ट्रीय कांग्रेस',
     leaderEn: 'Rahul Gandhi',
     leaderHi: 'राहुल गांधी',
-    leaderPhotoUrl: '/assets/leaders/inc.jpg',
+    leaderPhotoUrl: './assets/leaders/inc.jpg',
   },
   RLD: {
     shortEn: 'RLD',
@@ -81,7 +81,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'राष्ट्रीय लोक दल',
     leaderEn: 'Jayant Chaudhary',
     leaderHi: 'जयंत चौधरी',
-    leaderPhotoUrl: '/assets/leaders/rld.jpg',
+    leaderPhotoUrl: './assets/leaders/rld.jpg',
   },
   AD: {
     shortEn: 'Apna Dal (S)',
@@ -89,7 +89,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'अपना दल (सोनेलाल)',
     leaderEn: 'Anupriya Patel',
     leaderHi: 'अनुप्रिया पटेल',
-    leaderPhotoUrl: '/assets/leaders/ad.jpg',
+    leaderPhotoUrl: './assets/leaders/ad.jpg',
   },
   NISHAD: {
     shortEn: 'NISHAD',
@@ -97,7 +97,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'निषाद पार्टी',
     leaderEn: 'Sanjay Nishad',
     leaderHi: 'संजय निषाद',
-    leaderPhotoUrl: '/assets/leaders/nishad.jpg',
+    leaderPhotoUrl: './assets/leaders/nishad.jpg',
   },
   SBSP: {
     shortEn: 'SBSP',
@@ -105,7 +105,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'सुहेलदेव भारतीय समाज पार्टी',
     leaderEn: 'Om Prakash Rajbhar',
     leaderHi: 'ओम प्रकाश राजभर',
-    leaderPhotoUrl: '/assets/leaders/sbsp.jpg',
+    leaderPhotoUrl: './assets/leaders/sbsp.jpg',
   },
   AIMIM: {
     shortEn: 'AIMIM',
@@ -113,7 +113,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'ऑल इंडिया मजलिस-ए-इत्तेहादुल मुस्लिमीन',
     leaderEn: 'Asaduddin Owaisi',
     leaderHi: 'असदुद्दीन ओवैसी',
-    leaderPhotoUrl: '/assets/leaders/aimim.jpg',
+    leaderPhotoUrl: './assets/leaders/aimim.jpg',
   },
   ASP: {
     shortEn: 'Azad Samaj Party',
@@ -121,7 +121,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'आजाद समाज पार्टी (कांशीराम)',
     leaderEn: 'Chandrashekhar Azad',
     leaderHi: 'चन्द्रशेखर आजाद',
-    leaderPhotoUrl: '/assets/leaders/asp.jpg',
+    leaderPhotoUrl: './assets/leaders/asp.jpg',
   },
   JANSATTA: {
     shortEn: 'Jansatta Dal',
@@ -129,7 +129,7 @@ export const PARTY_META_MAP: Record<string, PartyMeta> = {
     nameHi: 'जनसत्ता दल लोकतांत्रिक',
     leaderEn: 'Raghuraj Pratap Singh',
     leaderHi: 'रघुराज प्रताप सिंह',
-    leaderPhotoUrl: '/assets/aistudio/images__3__4371317e.jpeg',
+    leaderPhotoUrl: './assets/aistudio/images__3__4371317e.jpeg',
   },
   OTH: {
     shortEn: 'Others / IND',

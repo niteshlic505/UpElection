@@ -6,18 +6,6 @@
   NODE_VERSION = "22"
 
 [[redirects]]
-  from = "https://www.upjanmat.in/*"
-  to = "https://upjanmat.in/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "http://www.upjanmat.in/*"
-  to = "https://upjanmat.in/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

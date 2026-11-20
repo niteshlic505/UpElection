@@ -61,7 +61,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ language, co
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <img
-                  src="/assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg"
+                  src="./assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg"
                   alt="UP Mandate App Icon"
                   referrerPolicy="no-referrer"
                   className="w-12 h-12 rounded-2xl object-cover border border-amber-400/40 shadow-md shrink-0"

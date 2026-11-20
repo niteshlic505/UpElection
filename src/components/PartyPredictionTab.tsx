@@ -31,6 +31,7 @@ import { TRANSLATIONS } from '../i18n/translations';
 import { ChartSegment, DoughnutChart3D } from './DoughnutChart3D';
 import { NeonLeaderSquare } from './NeonLeaderSquare';
 import { GreenRotatingInnerOutline } from './GreenRotatingInnerOutline';
+import { CommunityVotesAggregate } from '../utils/communityVotes';
 
 interface PartyPredictionTabProps {
   parties: PartyConfig[];
@@ -39,6 +40,7 @@ interface PartyPredictionTabProps {
   isSignedIn: boolean;
   isSaving: boolean;
   language: AppLanguage;
+  communityVotes?: CommunityVotesAggregate;
   onUpdatePartyBands: (nextBands: Record<string, number>, saveToCloud?: boolean) => Promise<void>;
   onGoogleSignIn: () => void;
 }
@@ -52,6 +54,7 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
   isSignedIn,
   isSaving,
   language,
+  communityVotes,
   onUpdatePartyBands,
   onGoogleSignIn,
 }) => {
@@ -515,6 +518,12 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                                   {leaderName}
                                 </div>
                               )}
+                              {communityVotes && (
+                                <div className="text-[9px] sm:text-[10px] font-mono-num font-bold text-emerald-300 truncate mt-0.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                                  {communityVotes.partyVotesMap[party.code.toUpperCase()]?.voterCount ?? 0}{' '}
+                                  {language === 'hi' ? 'वोट' : 'voted'}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -550,9 +559,17 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                         )}
                       </div>
                     </div>
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {t.bandOf5}
-                    </span>
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap block">
+                        {t.bandOf5}
+                      </span>
+                      {communityVotes && (
+                        <span className="text-[11px] font-mono-num font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                          {communityVotes.partyVotesMap[selectedParty.code.toUpperCase()]?.voterCount ?? 0}{' '}
+                          {language === 'hi' ? 'उपयोगकर्ताओं ने वोट दिया' : 'users voted'}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Stepper Controls */}

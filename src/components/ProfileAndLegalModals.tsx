@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Check,
+  Copy,
   Download,
   Gift,
+  Lock,
   LogOut,
   Moon,
   Phone,
@@ -14,6 +17,7 @@ import {
 } from 'lucide-react';
 import { AppLanguage, UserPredictionData, UserProfileData } from '../types/election';
 import { APP_VERSION_CODE, APP_VERSION_NAME } from '../config/appVersion';
+import { getPublicContestantId } from '../utils/uniqueId';
 
 interface ProfileModalProps {
   open: boolean;
@@ -54,6 +58,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [optIn, setOptIn] = useState(userProfile?.leaderboardOptIn ?? true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState(false);
+  const uniqueContestantId = userProfile ? getPublicContestantId(userProfile) : null;
 
   useEffect(() => {
     if (userProfile) {
@@ -61,6 +67,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       setOptIn(userProfile.leaderboardOptIn);
     }
     setConfirmDelete(false);
+    setCopiedId(false);
   }, [userProfile, open]);
 
   if (!open) return null;
@@ -186,6 +193,39 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           </div>
         ) : (
           <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
+            {/* Permanent Alphanumeric Unique Identification Number */}
+            {uniqueContestantId && (
+              <div className="rounded-2xl bg-emerald-50/85 dark:bg-emerald-950/50 border border-emerald-300/80 dark:border-emerald-700/60 p-3.5 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                    <Lock className="w-3.5 h-3.5" />
+                    {language === 'hi' ? 'आपका यूनिक पहचान नंबर' : 'Your Unique Identification Number'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard?.writeText(uniqueContestantId).then(() => {
+                        setCopiedId(true);
+                        setTimeout(() => setCopiedId(false), 2000);
+                      });
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 cursor-pointer"
+                  >
+                    {copiedId ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedId ? (language === 'hi' ? 'कॉपी हुआ' : 'Copied') : (language === 'hi' ? 'कॉपी करें' : 'Copy')}</span>
+                  </button>
+                </div>
+                <div className="font-mono-num font-extrabold text-lg tracking-wider text-slate-900 dark:text-white">
+                  {uniqueContestantId}
+                </div>
+                <p className="text-[11px] text-emerald-800/90 dark:text-emerald-200/85 leading-relaxed">
+                  {language === 'hi'
+                    ? 'सार्वजनिक लीडरबोर्ड पर केवल यही अल्फ़ान्यूमेरिक यूनिक ID दिखाई जाती है। कोई अन्य उपयोगकर्ता कभी आपका नाम, फ़ोन या ईमेल नहीं देख सकता।'
+                    : 'Only this alphanumeric Unique ID is displayed on the public leaderboard. No other user can ever see your name, phone number, or email.'}
+                </p>
+              </div>
+            )}
+
             {userProfile?.phoneNumber && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 font-mono-num">
                 <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -195,7 +235,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                Public Leaderboard Alias (Phone &amp; Email stay private)
+                Private Profile Display Name (Visible only to you — never on Leaderboard)
               </label>
               <input
                 type="text"
@@ -212,7 +252,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   Show on Public Leaderboard
                 </div>
                 <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Only your public alias and score are visible
+                  Only your Unique ID ({uniqueContestantId || 'UPM-XXXXXXXX'}) and points are visible
                 </div>
               </div>
               <input
@@ -382,26 +422,29 @@ export const LegalComplianceModal: React.FC<LegalModalProps> = ({ open, onClose 
 
           <section className="space-y-1">
             <h4 className="font-display font-bold text-slate-900 dark:text-white">
-              3. Privacy &amp; Digital Personal Data Protection Act, 2023
+              3. Privacy, Unique Identification Number &amp; DPDP Act, 2023
             </h4>
             <p>
-              We collect only minimal authentication details (UID, verified mobile number or Google Sign-In display name,
-              and optional profile image) to sync your predictions across web and mobile. Phone numbers and email
-              addresses are isolated in private storage and are never displayed on public leaderboards. You may export or
-              permanently delete your account and associated data at any time via Profile Settings. We do not collect
-              Voter ID or Aadhaar numbers.
+              Upon registration, every user is assigned a permanent alphanumeric Unique Identification Number (format:{' '}
+              <strong>UPM-XXXXXXXX</strong>). At no point can any user see another user&apos;s name, phone number, or
+              email address — the public leaderboard displays rankings strictly using Unique Identification Numbers. You
+              may export or permanently delete your account and associated data at any time via Profile Settings. We do
+              not collect Voter ID or Aadhaar numbers.
             </p>
           </section>
 
           <section className="space-y-1">
             <h4 className="font-display font-bold text-slate-900 dark:text-white">
-              4. Leaderboard Scoring &amp; Winner Prizes Worth ₹50 Lakhs
+              4. Contest Scoring Rules &amp; Winner Declaration
             </h4>
             <p>
-              After verified ECI results are published: 10 points per correct constituency winner, 100 points per exact
-              party 5-seat range match, and 50 points completion bonus. Top-ranked participants on the free open
-              leaderboard qualify for prizes and gifts worth ₹50 Lakhs, subject to applicable Indian law and winner
-              verification.
+              Every prediction made — whether in party seats, alliance seats, or a constituency candidate pick — earns{' '}
+              <strong>+1 point</strong>. After verified ECI results are declared: every correctly chosen winning
+              candidate of each constituency earns <strong>+5 points</strong>; each party&apos;s seat count predicted
+              within a range of 10 of actual seats won earns <strong>+20 points</strong>; and each alliance&apos;s seat
+              count predicted within a range of 10 of actual seats won earns <strong>+50 points</strong>. The user with
+              the highest total points at the end is declared as the winner and qualifies for the ₹50 Lakh prizes &amp;
+              gifts pool, subject to applicable Indian law and verification.
             </p>
           </section>
 

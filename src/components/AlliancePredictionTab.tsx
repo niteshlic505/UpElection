@@ -39,6 +39,7 @@ import { TRANSLATIONS } from '../i18n/translations';
 import { ChartSegment, DoughnutChart3D } from './DoughnutChart3D';
 import { NeonLeaderSquare } from './NeonLeaderSquare';
 import { GreenRotatingInnerOutline } from './GreenRotatingInnerOutline';
+import { CommunityVotesAggregate } from '../utils/communityVotes';
 
 interface AlliancePredictionTabProps {
   prediction: UserPredictionData;
@@ -46,6 +47,7 @@ interface AlliancePredictionTabProps {
   isSignedIn: boolean;
   isSaving: boolean;
   language: AppLanguage;
+  communityVotes?: CommunityVotesAggregate;
   onUpdateAllianceBands: (nextBands: Record<string, number>, saveToCloud?: boolean) => Promise<void>;
   onGoogleSignIn: () => void;
 }
@@ -58,6 +60,7 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
   isSignedIn,
   isSaving,
   language,
+  communityVotes,
   onUpdateAllianceBands,
   onGoogleSignIn,
 }) => {
@@ -569,6 +572,18 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                             >
                               {t.partySumHint(partySum)}
                             </div>
+                            {communityVotes && (
+                              <div
+                                className={`text-[10px] font-mono-num font-bold mt-0.5 ${
+                                  isSelected
+                                    ? 'text-emerald-300'
+                                    : 'text-emerald-600 dark:text-emerald-400'
+                                }`}
+                              >
+                                {communityVotes.allianceVotesMap[alliance.code]?.voterCount ?? 0}{' '}
+                                {language === 'hi' ? 'उपयोगकर्ताओं ने वोट दिया' : 'users voted'}
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -631,9 +646,17 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                    {t.bandOf5}
-                  </span>
+                  <div className="text-right shrink-0">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap block">
+                      {t.bandOf5}
+                    </span>
+                    {communityVotes && (
+                      <span className="text-[11px] font-mono-num font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                        {communityVotes.allianceVotesMap[selectedAlliance.code]?.voterCount ?? 0}{' '}
+                        {language === 'hi' ? 'उपयोगकर्ताओं ने वोट दिया' : 'users voted'}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Stepper Controls */}

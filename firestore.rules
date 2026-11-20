@@ -48,11 +48,16 @@ service cloud.firestore {
         get(/databases/$(database)/documents/election_config/global).data.isLocked == false;
     }
 
+    function isValidUniqueUserId(val) {
+      return val is string && val.size() == 12 && val.matches('^UPM-[A-Z0-9]{8}$');
+    }
+
     // Entity Validation Blueprints
     function isValidUserProfile(data) {
       return data.keys().hasAll(['uid', 'displayName', 'publicAlias', 'leaderboardOptIn', 'consentAccepted', 'createdAt', 'updatedAt']) &&
-        data.keys().hasOnly(['uid', 'displayName', 'publicAlias', 'email', 'phoneNumber', 'authProvider', 'photoURL', 'leaderboardOptIn', 'consentAccepted', 'isPro', 'membershipTier', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'uniqueUserId', 'displayName', 'publicAlias', 'email', 'phoneNumber', 'authProvider', 'photoURL', 'leaderboardOptIn', 'consentAccepted', 'isPro', 'membershipTier', 'createdAt', 'updatedAt']) &&
         isValidId(data.uid) &&
+        (!('uniqueUserId' in data) || isValidUniqueUserId(data.uniqueUserId)) &&
         data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
         data.publicAlias is string && data.publicAlias.size() >= 2 && data.publicAlias.size() <= 40 &&
         (!('email' in data) || (data.email is string && data.email.size() <= 160)) &&
@@ -108,18 +113,48 @@ service cloud.firestore {
     }
 
     function isValidLeaderboardEntry(data) {
-      return data.keys().hasAll(['uid', 'publicAlias', 'optIn', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'officialPoints', 'correctConstituencies', 'correctPartyBands', 'updatedAt']) &&
-        data.keys().hasOnly(['uid', 'publicAlias', 'optIn', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'officialPoints', 'correctConstituencies', 'correctPartyBands', 'updatedAt']) &&
+      return data.keys().hasAll(['uid', 'uniqueUserId', 'publicAlias', 'optIn', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'officialPoints', 'correctConstituencies', 'correctPartyBands', 'updatedAt']) &&
+        data.keys().hasOnly([
+          'uid',
+          'uniqueUserId',
+          'publicAlias',
+          'optIn',
+          'completionPercent',
+          'completedSeats',
+          'partyAllocated',
+          'allianceAllocated',
+          'partyPredictionCount',
+          'alliancePredictionCount',
+          'predictionPoints',
+          'civicScore',
+          'officialPoints',
+          'correctConstituencies',
+          'correctPartyBands',
+          'correctAllianceBands',
+          'partyBands',
+          'allianceBands',
+          'constituencyVotes',
+          'updatedAt'
+        ]) &&
         isValidId(data.uid) &&
-        data.publicAlias is string && data.publicAlias.size() >= 2 && data.publicAlias.size() <= 40 &&
+        isValidUniqueUserId(data.uniqueUserId) &&
+        data.publicAlias == data.uniqueUserId &&
         data.optIn is bool &&
         data.completionPercent is int && data.completionPercent >= 0 && data.completionPercent <= 100 &&
         data.completedSeats is int && data.completedSeats >= 0 && data.completedSeats <= 403 &&
         data.partyAllocated is int && data.partyAllocated >= 0 && data.partyAllocated <= 403 &&
+        (!('allianceAllocated' in data) || (data.allianceAllocated is int && data.allianceAllocated >= 0 && data.allianceAllocated <= 403)) &&
+        (!('partyPredictionCount' in data) || (data.partyPredictionCount is int && data.partyPredictionCount >= 0 && data.partyPredictionCount <= 20)) &&
+        (!('alliancePredictionCount' in data) || (data.alliancePredictionCount is int && data.alliancePredictionCount >= 0 && data.alliancePredictionCount <= 10)) &&
+        (!('predictionPoints' in data) || (data.predictionPoints is int && data.predictionPoints >= 0 && data.predictionPoints <= 450)) &&
         data.civicScore is int && data.civicScore >= 0 && data.civicScore <= 1000 &&
-        data.officialPoints is int && data.officialPoints >= 0 && data.officialPoints <= 10000 &&
+        data.officialPoints is int && data.officialPoints >= 0 && data.officialPoints <= 5000 &&
         data.correctConstituencies is int && data.correctConstituencies >= 0 && data.correctConstituencies <= 403 &&
         data.correctPartyBands is int && data.correctPartyBands >= 0 && data.correctPartyBands <= 20 &&
+        (!('correctAllianceBands' in data) || (data.correctAllianceBands is int && data.correctAllianceBands >= 0 && data.correctAllianceBands <= 10)) &&
+        (!('partyBands' in data) || (data.partyBands is map && data.partyBands.size() <= 20)) &&
+        (!('allianceBands' in data) || (data.allianceBands is map && data.allianceBands.size() <= 10)) &&
+        (!('constituencyVotes' in data) || (data.constituencyVotes is map && data.constituencyVotes.size() <= 403)) &&
         data.updatedAt is timestamp;
     }
 
@@ -233,9 +268,10 @@ service cloud.firestore {
           (
             isOwner(userId) &&
             incoming().uid == existing().uid &&
+            (!('uniqueUserId' in existing()) || incoming().uniqueUserId == existing().uniqueUserId) &&
             incoming().createdAt == existing().createdAt &&
             incoming().updatedAt == request.time &&
-            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'publicAlias', 'photoURL', 'leaderboardOptIn', 'consentAccepted', 'updatedAt'])
+            incoming().diff(existing()).affectedKeys().hasOnly(['uniqueUserId', 'displayName', 'publicAlias', 'photoURL', 'leaderboardOptIn', 'consentAccepted', 'updatedAt'])
           )
         );
       allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
@@ -282,7 +318,7 @@ service cloud.firestore {
       allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
     }
 
-    // 3. Leaderboard (Non-PII)
+    // 3. Leaderboard & Anonymized Community Votes (Strictly Zero-Name, Unique ID Only)
     match /leaderboard/{userId} {
       allow get: if isValidId(userId) && isSignedIn() && (existing().optIn == true || isOwner(userId) || isAdmin());
       allow list: if isSignedIn() && (resource.data.optIn == true || isAdmin());
@@ -292,6 +328,7 @@ service cloud.firestore {
         incoming().officialPoints == 0 &&
         incoming().correctConstituencies == 0 &&
         incoming().correctPartyBands == 0 &&
+        (!('correctAllianceBands' in incoming()) || incoming().correctAllianceBands == 0) &&
         incoming().updatedAt == request.time;
       allow update: if isValidId(userId) &&
         isValidLeaderboardEntry(incoming()) && (
@@ -299,11 +336,30 @@ service cloud.firestore {
           (
             isOwner(userId) &&
             incoming().uid == existing().uid &&
+            (!('uniqueUserId' in existing()) || incoming().uniqueUserId == existing().uniqueUserId) &&
             incoming().officialPoints == existing().officialPoints &&
             incoming().correctConstituencies == existing().correctConstituencies &&
             incoming().correctPartyBands == existing().correctPartyBands &&
+            (!('correctAllianceBands' in incoming()) || (!('correctAllianceBands' in existing()) && incoming().correctAllianceBands == 0) || incoming().correctAllianceBands == existing().correctAllianceBands) &&
             incoming().updatedAt == request.time &&
-            incoming().diff(existing()).affectedKeys().hasOnly(['publicAlias', 'optIn', 'completionPercent', 'completedSeats', 'partyAllocated', 'civicScore', 'updatedAt'])
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'uniqueUserId',
+              'publicAlias',
+              'optIn',
+              'completionPercent',
+              'completedSeats',
+              'partyAllocated',
+              'allianceAllocated',
+              'partyPredictionCount',
+              'alliancePredictionCount',
+              'predictionPoints',
+              'civicScore',
+              'correctAllianceBands',
+              'partyBands',
+              'allianceBands',
+              'constituencyVotes',
+              'updatedAt'
+            ])
           )
         );
       allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());

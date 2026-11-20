@@ -29,6 +29,10 @@ import { TOTAL_UP_SEATS, getPartyColor } from '../data/upParties';
 import { TRANSLATIONS } from '../i18n/translations';
 import { useLeaderPhoto } from '../utils/leaderPhotoLookup';
 import { GreenRotatingInnerOutline } from './GreenRotatingInnerOutline';
+import {
+  CommunityVotesAggregate,
+  getCandidateCommunityVotes,
+} from '../utils/communityVotes';
 
 interface ConstituenciesTabProps {
   constituencies: ConstituencyRecord[];
@@ -39,6 +43,7 @@ interface ConstituenciesTabProps {
   electionConfig: ElectionConfigData;
   isSaving: boolean;
   language: AppLanguage;
+  communityVotes?: CommunityVotesAggregate;
   onSelectCandidate: (acNo: number, pick: ConstituencyPick) => Promise<void>;
 }
 
@@ -144,6 +149,7 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
   electionConfig,
   isSaving,
   language,
+  communityVotes,
   onSelectCandidate,
 }) => {
   const t = TRANSLATIONS[language].constituencies;
@@ -562,6 +568,13 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
                 hoveredCandidateKey !== null ? isHovered : isSelected;
               const partyColor = getPartyColor(opt.party);
 
+              const candCommunity = getCandidateCommunityVotes(
+                communityVotes,
+                selectedSeat.acNo,
+                opt.name,
+                opt.party,
+              );
+
               return (
                 <button
                   key={opt.key}
@@ -618,12 +631,26 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
                       <div className="font-display font-bold text-sm text-slate-900 dark:text-white truncate">
                         {opt.name}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         <span className="font-bold" style={{ color: partyColor }}>
                           {opt.party}
                         </span>
                         <span aria-hidden="true">·</span>
                         <span>{opt.badge}</span>
+                        {communityVotes && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            <span className="font-mono-num font-bold text-emerald-700 dark:text-emerald-400">
+                              {candCommunity.voterCount}{' '}
+                              {language === 'hi'
+                                ? 'उपयोगकर्ताओं ने चुना'
+                                : candCommunity.voterCount === 1
+                                ? 'user chose'
+                                : 'users chose'}
+                              {candCommunity.totalSeatVoters > 0 ? ` (${candCommunity.sharePercent}%)` : ''}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -854,6 +881,11 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                         {seat.district} · 2022: {seat.hist2022.winnerName} ({seat.hist2022.winnerParty})
+                        {communityVotes?.constituencyVotesMap[seat.acNo]
+                          ? ` · ${communityVotes.constituencyVotesMap[seat.acNo].totalVoters} ${
+                              language === 'hi' ? 'वोट' : 'votes'
+                            }`
+                          : ''}
                       </div>
                     </div>
                   </div>
