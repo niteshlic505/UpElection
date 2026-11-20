@@ -1,0 +1,60 @@
+name: Deploy Directly to GoDaddy cPanel Hosting (FTPS)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: godaddy-cpanel-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check GoDaddy FTP secrets
+        id: check_secrets
+        env:
+          FTP_SERVER: ${{ secrets.GODADDY_FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.GODADDY_FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.GODADDY_FTP_PASSWORD }}
+        run: |
+          if [ -n "$FTP_SERVER" ] && [ -n "$FTP_USERNAME" ] && [ -n "$FTP_PASSWORD" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping GoDaddy cPanel FTPS deploy: add GODADDY_FTP_SERVER, GODADDY_FTP_USERNAME, and GODADDY_FTP_PASSWORD in GitHub Settings -> Secrets and variables -> Actions to enable."
+          fi
+
+      - name: Checkout repository
+        if: steps.check_secrets.outputs.configured == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        if: steps.check_secrets.outputs.configured == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.check_secrets.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Build production app
+        if: steps.check_secrets.outputs.configured == 'true'
+        run: npm run build
+
+      - name: Sync built files to GoDaddy public_html
+        if: steps.check_secrets.outputs.configured == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.GODADDY_FTP_SERVER }}
+          username: ${{ secrets.GODADDY_FTP_USERNAME }}
+          password: ${{ secrets.GODADDY_FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./dist/
+          server-dir: /public_html/
+          dangerous-clean-slate: false
