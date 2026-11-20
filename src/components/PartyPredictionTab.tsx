@@ -30,6 +30,7 @@ import {
 import { TRANSLATIONS } from '../i18n/translations';
 import { ChartSegment, DoughnutChart3D } from './DoughnutChart3D';
 import { NeonLeaderSquare } from './NeonLeaderSquare';
+import { GreenRotatingInnerOutline } from './GreenRotatingInnerOutline';
 
 interface PartyPredictionTabProps {
   parties: PartyConfig[];
@@ -243,20 +244,27 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                     key={seg.code}
                     type="button"
                     onClick={() => setSelectedPartyCode(seg.code)}
-                    className={`w-full flex items-center justify-between gap-1 text-left px-2 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                    className={`relative overflow-hidden w-full flex items-center justify-between gap-1 text-left px-2 py-1.5 rounded-lg transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-blue-50 dark:bg-blue-950/60 ring-1 ring-blue-300 dark:ring-blue-700'
+                        ? 'bg-emerald-50/90 dark:bg-emerald-950/45 ring-1 ring-emerald-400/70 dark:ring-emerald-500/60'
                         : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                     }`}
                   >
-                    <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 min-w-0">
+                    {isSelected && (
+                      <GreenRotatingInnerOutline
+                        insetClass="inset-[1.5px]"
+                        radiusClass="rounded-[6.5px]"
+                        strokeWidth="2px"
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-1.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 min-w-0">
                       <span
                         className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: seg.color }}
                       />
                       <span className="truncate">{label}</span>
                     </span>
-                    <span className="text-[11px] font-mono-num font-semibold text-slate-700 dark:text-slate-300 shrink-0">
+                    <span className="relative z-10 text-[11px] font-mono-num font-semibold text-slate-700 dark:text-slate-300 shrink-0">
                       {isHistorical ? seg.rangeLabel : getBandDisplaySeats(currentBands[seg.code] ?? 0)}
                     </span>
                   </button>
@@ -422,7 +430,7 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
                           animationDelay: floatDelay,
                           ...(isSelected
                             ? {
-                                boxShadow: `0 0 0 1.5px #38BDF8, 0 0 28px -1px rgba(0,240,255,0.85), 0 0 38px -6px ${party.color}cc, 0 16px 32px -10px rgba(5,11,26,0.85)`,
+                                boxShadow: `0 0 0 1.5px #22C55E, 0 0 26px -1px rgba(34,197,94,0.78), 0 0 38px -6px ${party.color}bb, 0 16px 32px -10px rgba(5,11,26,0.85)`,
                               }
                             : undefined),
                         }}
@@ -444,6 +452,14 @@ export const PartyPredictionTab: React.FC<PartyPredictionTabProps> = ({
 
                         {/* Inner Square Leader Image Surface */}
                         <div className="relative z-10 w-full h-full rounded-[13.5px] overflow-hidden bg-[#06112B] ring-1 ring-inset ring-cyan-200/30 up-md3-ripple">
+                          {/* Rotating Green Inner Outline when Party is Selected */}
+                          {isSelected && (
+                            <GreenRotatingInnerOutline
+                              insetClass="inset-[3px]"
+                              radiusClass="rounded-[10.5px]"
+                              strokeWidth="2.5px"
+                            />
+                          )}
                           {/* Full-Square Leader Portrait Background */}
                           {leaderPhoto ? (
                             <img

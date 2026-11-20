@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Force HTTPS and canonical apex domain (upjanmat.in)
+  RewriteCond %{HTTPS} !=on [OR]
+  RewriteCond %{HTTP_HOST} ^www\.upjanmat\.in$ [NC]
+  RewriteRule ^(.*)$ https://upjanmat.in/$1 [L,R=301]
+
+  # Serve existing files & directories directly (assets, ads.txt, robots.txt, sitemap.xml)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # SPA fallback to index.html
+  RewriteRule ^ /index.html [L]
+</IfModule>

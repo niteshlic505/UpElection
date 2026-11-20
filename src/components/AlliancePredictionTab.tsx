@@ -38,6 +38,7 @@ import {
 import { TRANSLATIONS } from '../i18n/translations';
 import { ChartSegment, DoughnutChart3D } from './DoughnutChart3D';
 import { NeonLeaderSquare } from './NeonLeaderSquare';
+import { GreenRotatingInnerOutline } from './GreenRotatingInnerOutline';
 
 interface AlliancePredictionTabProps {
   prediction: UserPredictionData;
@@ -263,13 +264,20 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                       setSelectedAllianceCode(alliance.code);
                       if (isHistorical) setSelectedYear('2027');
                     }}
-                    className={`w-full flex items-center justify-between gap-2 text-left px-3 py-2 rounded-xl transition-colors cursor-pointer ${
+                    className={`relative overflow-hidden w-full flex items-center justify-between gap-2 text-left px-3 py-2 rounded-xl transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-blue-50 dark:bg-blue-950/60 ring-1 ring-blue-300 dark:ring-blue-700'
+                        ? 'bg-emerald-50/90 dark:bg-emerald-950/45 ring-1 ring-emerald-400/70 dark:ring-emerald-500/60'
                         : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                     }`}
                   >
-                    <div className="min-w-0">
+                    {isSelected && (
+                      <GreenRotatingInnerOutline
+                        insetClass="inset-[2px]"
+                        radiusClass="rounded-[10px]"
+                        strokeWidth="2px"
+                      />
+                    )}
+                    <div className="relative z-10 min-w-0">
                       <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-100">
                         <span
                           className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -281,7 +289,7 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                         {language === 'hi' ? alliance.formulaHi : alliance.formulaEn}
                       </div>
                     </div>
-                    <span className="text-xs font-mono-num font-bold text-slate-800 dark:text-slate-200 shrink-0">
+                    <span className="relative z-10 text-xs font-mono-num font-bold text-slate-800 dark:text-slate-200 shrink-0">
                       {isHistorical ? seats : `${band.label}`}
                     </span>
                   </button>
@@ -467,7 +475,7 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                           isSelected
                             ? {
                                 borderColor: alliance.color,
-                                boxShadow: `0 0 0 2px ${alliance.color}, 0 12px 24px -10px ${alliance.color}88`,
+                                boxShadow: `0 0 0 1.5px rgba(34,197,94,0.85), 0 0 24px -4px rgba(34,197,94,0.55), 0 12px 24px -10px ${alliance.color}88`,
                               }
                             : undefined
                         }
@@ -477,7 +485,15 @@ export const AlliancePredictionTab: React.FC<AlliancePredictionTabProps> = ({
                             : 'bg-slate-50/85 dark:bg-slate-900/60 border-slate-200/80 dark:border-slate-700/80 hover:border-blue-400'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-2">
+                        {/* Rotating Green Inner Outline when Alliance is Selected */}
+                        {isSelected && (
+                          <GreenRotatingInnerOutline
+                            insetClass="inset-[4px]"
+                            radiusClass="rounded-[12px]"
+                            strokeWidth="2.5px"
+                          />
+                        )}
+                        <div className="relative z-10 flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span

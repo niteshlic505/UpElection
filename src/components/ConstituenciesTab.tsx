@@ -28,6 +28,7 @@ import { UP_DISTRICTS } from '../data/upConstituencies403';
 import { TOTAL_UP_SEATS, getPartyColor } from '../data/upParties';
 import { TRANSLATIONS } from '../i18n/translations';
 import { useLeaderPhoto } from '../utils/leaderPhotoLookup';
+import { GreenRotatingInnerOutline } from './GreenRotatingInnerOutline';
 
 interface ConstituenciesTabProps {
   constituencies: ConstituencyRecord[];
@@ -160,6 +161,7 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
     party: string;
     source: string;
   } | null>(null);
+  const [hoveredCandidateKey, setHoveredCandidateKey] = useState<string | null>(null);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
   const desktopPanelRef = useRef<HTMLDivElement | null>(null);
   const mobileModalPanelRef = useRef<HTMLDivElement | null>(null);
@@ -167,6 +169,7 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
   useEffect(() => {
     if (desktopPanelRef.current) desktopPanelRef.current.scrollTop = 0;
     if (mobileModalPanelRef.current) mobileModalPanelRef.current.scrollTop = 0;
+    setHoveredCandidateKey(null);
   }, [activeAcNo, mobileModalOpen]);
 
   useEffect(() => {
@@ -544,13 +547,19 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
           )}
 
           {/* Candidate Cards */}
-          <div className="space-y-2.5">
+          <div
+            className="space-y-2.5"
+            onPointerLeave={() => setHoveredCandidateKey(null)}
+          >
             {candidateOptions.map((opt) => {
               const isSelected = Boolean(
                 pendingSelection &&
                   pendingSelection.name.toLowerCase() === opt.name.toLowerCase() &&
                   pendingSelection.party.toUpperCase() === opt.party.toUpperCase(),
               );
+              const isHovered = hoveredCandidateKey === opt.key;
+              const showGreenOutline =
+                hoveredCandidateKey !== null ? isHovered : isSelected;
               const partyColor = getPartyColor(opt.party);
 
               return (
@@ -559,17 +568,39 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
                   type="button"
                   disabled={isLocked || isSaving}
                   onClick={() => handleSelectOption(opt)}
+                  onPointerEnter={(e) => {
+                    if (e.pointerType !== 'touch' && !isLocked && !isSaving) {
+                      setHoveredCandidateKey(opt.key);
+                    }
+                  }}
+                  onPointerLeave={(e) => {
+                    if (e.pointerType !== 'touch') {
+                      setHoveredCandidateKey((prev) => (prev === opt.key ? null : prev));
+                    }
+                  }}
                   className={`w-full rounded-2xl p-3 text-left border transition-all flex items-center justify-between gap-3 up-md3-ripple cursor-pointer ${
                     isSelected
-                      ? 'bg-blue-50 dark:bg-blue-950/60 border-[#1D4ED8] up-neon-cyan shadow-sm'
-                      : 'bg-white dark:bg-[#0F1B35] border-slate-200 dark:border-slate-700 hover:border-blue-400'
+                      ? 'bg-emerald-50/90 dark:bg-emerald-950/45 border-emerald-500/85 dark:border-emerald-400/75 shadow-[0_0_22px_-4px_rgba(34,197,94,0.48)]'
+                      : isHovered
+                      ? 'bg-emerald-50/55 dark:bg-emerald-950/30 border-emerald-500/75 dark:border-emerald-400/70 shadow-[0_0_20px_-5px_rgba(34,197,94,0.42)]'
+                      : 'bg-white dark:bg-[#0F1B35] border-slate-200 dark:border-slate-700 hover:border-emerald-400/70'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  {/* Rotating Green Inner Outline when Candidate is Hovered or Selected */}
+                  {showGreenOutline && (
+                    <GreenRotatingInnerOutline
+                      insetClass="inset-[3px]"
+                      radiusClass="rounded-[13px]"
+                      strokeWidth="2.5px"
+                    />
+                  )}
+                  <div className="relative z-10 flex items-center gap-3 min-w-0">
                     <div
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                         isSelected
-                          ? 'bg-[#1D4ED8] border-[#1D4ED8] text-white'
+                          ? 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.65)]'
+                          : isHovered
+                          ? 'border-emerald-500 dark:border-emerald-400'
                           : 'border-slate-300 dark:border-slate-600'
                       }`}
                     >
@@ -598,9 +629,9 @@ export const ConstituenciesTab: React.FC<ConstituenciesTabProps> = ({
                   </div>
 
                   <span
-                    className={`text-xs font-semibold shrink-0 ${
-                      isSelected
-                        ? 'text-[#1D4ED8] dark:text-blue-400'
+                    className={`relative z-10 text-xs font-semibold shrink-0 transition-colors ${
+                      isSelected || isHovered
+                        ? 'text-emerald-700 dark:text-emerald-300'
                         : 'text-slate-400 dark:text-slate-500'
                     }`}
                   >
