@@ -1281,13 +1281,17 @@ export default function App() {
       ? t.headers.admin
       : t.headers.leaderboard;
 
+  const handleFinishLoading = useCallback(() => {
+    setShowLoadingScreen(false);
+  }, []);
+
   return (
     <MotionConfig reducedMotion="user">
     <LoadingScreen
       visible={showLoadingScreen}
       language={language}
       authReady={authReady}
-      onFinish={() => setShowLoadingScreen(false)}
+      onFinish={handleFinishLoading}
     />
     <div className="min-h-dvh flex flex-col bg-[#FAF6EE] dark:bg-[#050B1A] up-desi-jaali text-slate-900 dark:text-slate-100 pb-22 md:pb-8">
       {/* Top Corporate Navy Material 3 App Bar with Saffron-White-Green Tiranga Accent */}
