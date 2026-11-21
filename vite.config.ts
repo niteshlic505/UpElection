@@ -23,8 +23,8 @@ export default defineConfig(() => {
         ],
         manifest: {
           id: './',
-          name: 'UP Mandate 2027 — Election Forecast',
-          short_name: 'UP Mandate',
+          name: 'UP Janmat — UP 2027 Election Forecast',
+          short_name: 'UP Janmat',
           description:
             'Independent Uttar Pradesh 2027 Assembly forecasting app across 403 seats & 75 districts.',
           theme_color: '#0A1633',

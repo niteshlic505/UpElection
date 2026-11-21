@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('UP Mandate ErrorBoundary caught:', error, errorInfo);
+    console.error('UP Janmat ErrorBoundary caught:', error, errorInfo);
   }
 
   private handleReset = (): void => {
@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#1D4ED8] text-white text-sm font-semibold hover:bg-blue-700 transition-colors cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
-              Reload UP Mandate
+              Reload UP Janmat
             </button>
           </div>
         </div>

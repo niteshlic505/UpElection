@@ -123,7 +123,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
       ? 'Loading 403 UP Assembly Constituencies...'
       : stage === 1
       ? 'Preparing 75 Districts & Alliance Data...'
-      : 'Ready for UP Mandate 2027';
+      : 'Ready for UP Janmat 2027';
 
   return (
     <AnimatePresence>
@@ -136,7 +136,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
           className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-[#040A18] text-white overflow-hidden select-none pt-safe pb-safe px-3 sm:px-6 py-4 sm:py-6"
           role="status"
           aria-live="polite"
-          aria-label="Loading UP Mandate 2027"
+          aria-label="Loading UP Janmat 2027"
         >
           {/* Full-Bleed Blurred Atmospheric Backdrop of the Montage */}
           <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -156,7 +156,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
           <div className="relative z-10 w-full max-w-md flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs sm:text-sm font-display font-extrabold tracking-tight">
               <span className="text-white">
-                UP <span className="text-[#FF9933] up-neon-text-gold-strong">Mandate</span>
+                UP <span className="text-[#FF9933] up-neon-text-gold-strong">Janmat</span>
               </span>
               <span aria-hidden="true" className="text-cyan-300/70">
                 ·

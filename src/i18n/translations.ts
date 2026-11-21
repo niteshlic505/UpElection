@@ -224,7 +224,7 @@ export const TRANSLATIONS: Record<AppLanguage, TranslationCopy> = {
       admin: 'Admin',
     },
     headers: {
-      home: 'UP Mandate',
+      home: 'UP Janmat',
       parties: 'Party Seat Prediction',
       alliances: 'Alliance Prediction',
       constituencies: 'Constituencies (403)',
@@ -399,7 +399,7 @@ export const TRANSLATIONS: Record<AppLanguage, TranslationCopy> = {
     leaderboard: {
       tabLeaderboard: 'Leaderboard',
       tabSummary: 'My Summary',
-      openBoardTitle: 'UP Mandate Civic Forecasters',
+      openBoardTitle: 'UP Janmat Civic Forecasters',
       openBoardSub: '100% Free Entry · Winners Earn Prizes & Gifts Worth ₹50 Lakhs',
       scoringRulesBtn: 'Scoring & Prize Rules',
       scoringTitle: 'Official Contest Scoring Rules',
@@ -446,7 +446,7 @@ export const TRANSLATIONS: Record<AppLanguage, TranslationCopy> = {
       admin: 'एडमिन',
     },
     headers: {
-      home: 'UP Mandate',
+      home: 'UP Janmat',
       parties: 'पार्टी सीट पूर्वानुमान',
       alliances: 'गठबंधन सीट पूर्वानुमान',
       constituencies: 'विधानसभा क्षेत्र (403)',
@@ -621,7 +621,7 @@ export const TRANSLATIONS: Record<AppLanguage, TranslationCopy> = {
     leaderboard: {
       tabLeaderboard: 'लीडरबोर्ड',
       tabSummary: 'मेरा सारांश',
-      openBoardTitle: 'UP Mandate शीर्ष पूर्वानुमानकर्ता',
+      openBoardTitle: 'UP Janmat शीर्ष पूर्वानुमानकर्ता',
       openBoardSub: '100% निःशुल्क प्रवेश · विजेताओं को ₹50 लाख के पुरस्कार व उपहार',
       scoringRulesBtn: 'अंक व पुरस्कार नियम',
       scoringTitle: 'आधिकारिक प्रतियोगिता अंक नियम',

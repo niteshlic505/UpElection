@@ -62,13 +62,13 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ language, co
               <div className="flex items-center gap-3">
                 <img
                   src="./assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg"
-                  alt="UP Mandate App Icon"
+                  alt="UP Janmat App Icon"
                   referrerPolicy="no-referrer"
                   className="w-12 h-12 rounded-2xl object-cover border border-amber-400/40 shadow-md shrink-0"
                 />
                 <div>
                   <h3 className="font-display font-bold text-base text-slate-900 dark:text-white">
-                    {language === 'hi' ? 'UP Mandate ऐप इंस्टॉल करें' : 'Install UP Mandate App'}
+                    {language === 'hi' ? 'UP Janmat ऐप इंस्टॉल करें' : 'Install UP Janmat App'}
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                     {language === 'hi'

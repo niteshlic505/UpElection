@@ -779,7 +779,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `up-mandate-candidate-votes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `up-janmat-candidate-votes-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     notify(`Exported ${filteredCandidateVotes.length} candidate vote tallies to CSV.`);
@@ -843,7 +843,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `up-mandate-user-choices-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `up-janmat-user-choices-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     notify(`Exported ${filteredJoinedUsers.length} user prediction records to CSV.`);
@@ -861,7 +861,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
             <div>
               <h2 className="font-display font-bold text-lg sm:text-xl">
-                UP Mandate Administration Console
+                UP Janmat Administration Console
               </h2>
               <p className="text-xs text-blue-200">
                 Role-based management for 403 seats, candidates, Section 126 blackout &amp; ECI verification

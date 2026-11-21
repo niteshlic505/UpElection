@@ -136,13 +136,13 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <div className="flex items-center gap-3 sm:gap-3.5">
                 <img
                   src={UP_MONTAGE_ART}
-                  alt="UP Mandate 2027 Emblem"
+                  alt="UP Janmat 2027 Emblem"
                   referrerPolicy="no-referrer"
                   className="w-13 h-13 sm:w-15 sm:h-15 rounded-2xl object-cover shadow-md border border-amber-300/50 bg-white/5 up-gold-rim shrink-0"
                 />
                 <div className="min-w-0">
                   <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight truncate">
-                    UP <span className="text-[#F59E0B] up-neon-text-gold">Mandate</span>
+                    UP <span className="text-[#F59E0B] up-neon-text-gold">Janmat</span>
                   </h2>
                   <p className="text-xs sm:text-sm text-blue-100/90 truncate">{t.home.tagline}</p>
                 </div>

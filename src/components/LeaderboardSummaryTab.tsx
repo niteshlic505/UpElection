@@ -265,8 +265,8 @@ export const LeaderboardSummaryTab: React.FC<LeaderboardSummaryTabProps> = ({
     setSubmitMessage(
       isSignedIn
         ? isHi
-          ? 'आपका 2027 UP Mandate पूर्वानुमान सबमिट होकर Firebase क्लाउड में सिंक हो गया है।'
-          : 'Your 2027 UP Mandate forecast has been marked as submitted and synced to Firebase Cloud.'
+          ? 'आपका 2027 UP Janmat पूर्वानुमान सबमिट होकर Firebase क्लाउड में सिंक हो गया है।'
+          : 'Your 2027 UP Janmat forecast has been marked as submitted and synced to Firebase Cloud.'
         : isHi
         ? 'लोकल रूप से सहेजा गया। क्लाउड पर सबमिट करने के लिए मोबाइल OTP या Google से साइन इन करें।'
         : 'Forecast saved locally. Sign in with Mobile OTP or Google to submit to Firebase Cloud.',

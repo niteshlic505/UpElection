@@ -83,7 +83,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const handleExport = () => {
     const payload = {
       exportedAt: new Date().toISOString(),
-      platform: 'UP Mandate (Free Civic Election Forecasting Platform · ₹50 Lakh Prizes & Gifts)',
+      platform: 'UP Janmat (Free Civic Election Forecasting Platform · ₹50 Lakh Prizes & Gifts)',
       profile: userProfile
         ? {
             publicAlias: userProfile.publicAlias,
@@ -96,7 +96,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'up-mandate-predictions.json';
+    a.download = 'up-janmat-predictions.json';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -349,7 +349,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           )}
 
           <div className="pt-2 text-center text-[11px] font-mono-num text-slate-400 dark:text-slate-500">
-            UP Mandate · v{APP_VERSION_NAME} (Build {APP_VERSION_CODE}) · 403 Seats
+            UP Janmat · v{APP_VERSION_NAME} (Build {APP_VERSION_CODE}) · 403 Seats
           </div>
         </div>
       </div>
@@ -400,7 +400,7 @@ export const LegalComplianceModal: React.FC<LegalModalProps> = ({ open, onClose 
               1. 100% Free Civic Opinion Platform &amp; ₹50 Lakh Prizes Pool
             </h4>
             <p>
-              UP Mandate (&ldquo;Your View. Every Constituency.&rdquo;) is a completely free, zero-entry-fee civic
+              UP Janmat (&ldquo;Your View. Every Constituency.&rdquo;) is a completely free, zero-entry-fee civic
               opinion and skill-based election forecasting platform. Every registered participant competes on equal
               footing without any paid tier or fee, and top forecasters win prizes and gifts worth ₹50 Lakhs.
               Community forecasts reflect user opinions and must not be construed as official Election Commission of
@@ -415,7 +415,7 @@ export const LegalComplianceModal: React.FC<LegalModalProps> = ({ open, onClose 
             <p>
               In accordance with Sections 126 and 126A of the Representation of the People Act, 1951 and Election Commission
               directions, statutory blackout controls override submission/display windows during prohibited 48-hour silence
-              and exit-poll restriction periods. UP Mandate is not affiliated with or endorsed by the Election Commission of
+              and exit-poll restriction periods. UP Janmat is not affiliated with or endorsed by the Election Commission of
               India or the Government of Uttar Pradesh.
             </p>
           </section>
@@ -454,7 +454,7 @@ export const LegalComplianceModal: React.FC<LegalModalProps> = ({ open, onClose 
             </h4>
             <p>
               For data correction, deletion requests, or compliance inquiries under IT Rules 2021 and DPDP Act 2023,
-              contact the UP Mandate Compliance Desk via the Privacy Request workflow in Profile Settings.
+              contact the UP Janmat Compliance Desk via the Privacy Request workflow in Profile Settings.
             </p>
           </section>
         </div>

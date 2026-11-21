@@ -1388,6 +1388,13 @@ export default function App() {
       ? t.headers.admin
       : t.headers.leaderboard;
 
+  useEffect(() => {
+    document.title =
+      activeTab === 'home'
+        ? `UP Janmat — ${t.brandSub}`
+        : `UP Janmat — ${headerTitle}`;
+  }, [activeTab, headerTitle, t.brandSub]);
+
   const handleFinishLoading = useCallback(() => {
     setShowLoadingScreen(false);
   }, []);
@@ -1424,23 +1431,17 @@ export default function App() {
             >
               <img
                 src="./assets/aistudio/UP_Election_App_Icon_1024_d13a55bb.jpg"
-                alt="UP Mandate"
+                alt="UP Janmat"
                 referrerPolicy="no-referrer"
                 className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shadow-md ring-1.5 ring-amber-300/80 shrink-0"
               />
-              <span className="font-display font-extrabold text-[17px] sm:text-xl lg:text-2xl tracking-tight flex items-center gap-1.5 min-w-0 truncate">
-                {activeTab === 'home' ? (
-                  <span className="truncate">
-                    UP <span className="text-[#FF9933]">Mandate</span>
-                  </span>
-                ) : (
-                  <span className="md:hidden truncate">{headerTitle}</span>
-                )}
+              <span className="flex flex-col text-left min-w-0 leading-tight">
+                <span className="font-display font-extrabold text-[17px] sm:text-xl lg:text-2xl tracking-tight truncate">
+                  UP <span className="text-[#FF9933]">Janmat</span>
+                </span>
                 {activeTab !== 'home' && (
-                  <span className="hidden md:inline-flex items-center truncate">
-                    <span>
-                      UP <span className="text-[#FF9933]">Mandate</span>
-                    </span>
+                  <span className="md:hidden text-[10.5px] font-semibold text-blue-200/90 truncate">
+                    {headerTitle}
                   </span>
                 )}
               </span>
