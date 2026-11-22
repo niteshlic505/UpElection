@@ -106,6 +106,7 @@ import { AuthModal } from './components/AuthModal';
 import { LegalComplianceModal, ProfileModal } from './components/ProfileAndLegalModals';
 import { LoadingScreen } from './components/LoadingScreen';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { AdSenseUnit } from './components/AdSenseUnit';
 
 const LOCAL_DRAFT_KEY = 'up_mandate_draft_v1';
 const THEME_KEY = 'up_mandate_theme';
@@ -1709,6 +1710,14 @@ export default function App() {
             onSaveElectionConfig={handleSaveElectionConfig}
             onSaveOfficialResult={handleSaveOfficialResult}
             onRecalculateLeaderboard={handleRecalculateLeaderboard}
+          />
+        )}
+
+        {activeTab !== 'admin' && (
+          <AdSenseUnit
+            key={`adsense-nkm-${activeTab}`}
+            adClient="ca-pub-1820309084512776"
+            adSlot="7029020659"
           />
         )}
           </motion.div>
