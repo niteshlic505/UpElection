@@ -258,6 +258,7 @@ export default function App() {
   const [allUserPredictions, setAllUserPredictions] = useState<UserPredictionData[]>([]);
   const autoSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const profileEnsureLockRef = useRef<Map<string, Promise<void>>>(new Map());
+  const phoneAuthFlowModeRef = useRef<'login' | 'signup' | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -448,6 +449,11 @@ export default function App() {
   // Auth listener
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user && phoneAuthFlowModeRef.current !== null) {
+        // Wait for handlePhoneVerified to verify registration status before updating app auth state or creating a profile
+        return;
+      }
+
       setFirebaseUser(user);
       setAuthReady(true);
 
@@ -973,13 +979,73 @@ export default function App() {
     }
   };
 
-  const handlePhoneVerified = async (uid: string, displayNameInput?: string) => {
+  const handlePhoneVerified = async (
+    user: User,
+    mode: 'login' | 'signup',
+    displayNameInput?: string,
+  ): Promise<{ ok: boolean; reason?: 'NOT_REGISTERED' }> => {
     setAuthError(null);
-    const currentUser = auth.currentUser;
-    if (currentUser && currentUser.uid === uid) {
-      await ensureUserProfile(currentUser, displayNameInput);
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (mode === 'login') {
+        const existingData = userSnap.exists() ? (userSnap.data() as UserProfileData) : null;
+        const hasRegisteredProfile = Boolean(
+          existingData &&
+            typeof existingData.displayName === 'string' &&
+            existingData.displayName.trim().length >= 2,
+        );
+
+        if (!hasRegisteredProfile) {
+          // User has not signed up with their mobile number and name yet — reject login and clean up session
+          try {
+            await deleteUser(user);
+          } catch {
+            try {
+              await signOut(auth);
+            } catch {
+              // ignore cleanup sign-out error
+            }
+          }
+          phoneAuthFlowModeRef.current = null;
+          setFirebaseUser(null);
+          setUserProfile(null);
+          setIsAdminUser(false);
+          return { ok: false, reason: 'NOT_REGISTERED' };
+        }
+
+        // Registered returning user — complete login directly without asking for name
+        phoneAuthFlowModeRef.current = null;
+        setFirebaseUser(user);
+        setAuthReady(true);
+        setIsAdminUser(isStrictGoogleAdmin(user));
+        await ensureUserProfile(user);
+        await syncGuestDraftIfNew(user.uid);
+        return { ok: true };
+      }
+
+      // Sign Up flow (first-time user with required name + mobile number)
+      phoneAuthFlowModeRef.current = null;
+      setFirebaseUser(user);
+      setAuthReady(true);
+      setIsAdminUser(isStrictGoogleAdmin(user));
+      await ensureUserProfile(user, displayNameInput);
+      await syncGuestDraftIfNew(user.uid);
+      return { ok: true };
+    } catch (err) {
+      phoneAuthFlowModeRef.current = null;
+      if (mode === 'login') {
+        try {
+          await signOut(auth);
+        } catch {
+          // ignore
+        }
+        setFirebaseUser(null);
+        setUserProfile(null);
+      }
+      throw err;
     }
-    await syncGuestDraftIfNew(uid);
   };
 
   const scheduleDebouncedCloudSync = useCallback(
@@ -1775,6 +1841,12 @@ export default function App() {
         onClose={() => setAuthModalOpen(false)}
         language={language}
         onGoogleSignIn={() => handleGoogleSignIn(true)}
+        onPhoneAuthModeStart={(mode) => {
+          phoneAuthFlowModeRef.current = mode;
+        }}
+        onPhoneAuthModeEnd={() => {
+          phoneAuthFlowModeRef.current = null;
+        }}
         onPhoneVerified={handlePhoneVerified}
       />
 

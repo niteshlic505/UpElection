@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ConfirmationResult, updateProfile } from 'firebase/auth';
+import { ConfirmationResult, User, updateProfile } from 'firebase/auth';
 import { motion } from 'motion/react';
 import {
   AlertTriangle,
@@ -11,11 +11,13 @@ import {
   ExternalLink,
   Gift,
   KeyRound,
+  LogIn,
   Phone,
   RefreshCw,
   ShieldCheck,
   Smartphone,
   User as UserIcon,
+  UserPlus,
   X,
 } from 'lucide-react';
 import {
@@ -30,12 +32,20 @@ import firebaseConfig from '../../firebase-applet-config.json';
 import { AppLanguage } from '../types/election';
 import { TRANSLATIONS } from '../i18n/translations';
 
+export type PhoneAuthMode = 'login' | 'signup';
+
 interface AuthModalProps {
   open: boolean;
   onClose: () => void;
   language: AppLanguage;
   onGoogleSignIn: () => Promise<void>;
-  onPhoneVerified?: (uid: string, displayNameInput?: string) => Promise<void>;
+  onPhoneAuthModeStart?: (mode: PhoneAuthMode) => void;
+  onPhoneAuthModeEnd?: () => void;
+  onPhoneVerified?: (
+    user: User,
+    mode: PhoneAuthMode,
+    displayNameInput?: string,
+  ) => Promise<{ ok: boolean; reason?: 'NOT_REGISTERED' }>;
 }
 
 const COUNTRY_CODES = [
@@ -50,9 +60,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   language,
   onGoogleSignIn,
+  onPhoneAuthModeStart,
+  onPhoneAuthModeEnd,
   onPhoneVerified,
 }) => {
   const t = TRANSLATIONS[language].auth;
+  const [authMode, setAuthMode] = useState<PhoneAuthMode>('login');
   const [countryCode, setCountryCode] = useState('+91');
   const [phoneDigits, setPhoneDigits] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -80,6 +93,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const recaptchaMountRef = useRef<HTMLDivElement | null>(null);
   const verifierRef = useRef<RecaptchaVerifier | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   const clearVerifier = useCallback(() => {
     if (verifierRef.current) {
@@ -104,6 +118,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setErrorMsg(null);
       setInfoMsg(null);
       setCopiedHost(false);
+      setStep('phone');
+      setOtpDigits('');
+      setConfirmationResult(null);
       return;
     }
 
@@ -265,6 +282,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     const cleanDigits = normalizePhoneDigits(phoneDigits, countryCode);
+    if (authMode === 'signup') {
+      const cleanName = displayName.trim();
+      if (cleanName.length < 2) {
+        setErrorMsg(
+          language === 'hi'
+            ? 'पहली बार साइन अप करने के लिए कृपया अपना नाम (कम से कम 2 अक्षर) दर्ज करें।'
+            : 'Please enter your name (at least 2 characters) to sign up for the first time.',
+        );
+        nameInputRef.current?.focus();
+        return;
+      }
+    }
     if (countryCode === '+91' && cleanDigits.length !== 10) {
       setErrorMsg(
         language === 'hi'
@@ -402,10 +431,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     setVerifyingOtp(true);
+    onPhoneAuthModeStart?.(authMode);
     try {
       const cred = await confirmationResult.confirm(cleanOtp);
-      const trimmedName = displayName.trim().slice(0, 40);
-      if (cred.user && trimmedName) {
+      const trimmedName = authMode === 'signup' ? displayName.trim().slice(0, 40) : '';
+      if (cred.user && authMode === 'signup' && trimmedName) {
         try {
           await updateProfile(cred.user, { displayName: trimmedName });
         } catch {
@@ -413,15 +443,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         }
       }
       if (cred.user && onPhoneVerified) {
-        await onPhoneVerified(cred.user.uid, trimmedName || undefined);
+        const res = await onPhoneVerified(cred.user, authMode, trimmedName || undefined);
+        if (!res.ok && res.reason === 'NOT_REGISTERED') {
+          const cleanDigits = normalizePhoneDigits(phoneDigits, countryCode);
+          const formattedPhone = `${countryCode}${cleanDigits}`;
+          clearVerifier();
+          setConfirmationResult(null);
+          setOtpDigits('');
+          setStep('phone');
+          setAuthMode('signup');
+          setInfoMsg(null);
+          setErrorMsg(
+            language === 'hi'
+              ? `यह मोबाइल नंबर (${formattedPhone}) अभी पंजीकृत नहीं है। कृपया पहले अपना नाम और मोबाइल नंबर दर्ज करके साइन अप करें।`
+              : `This mobile number (${formattedPhone}) is not signed up yet. Please sign up first by entering your name and mobile number.`,
+          );
+          setTimeout(() => nameInputRef.current?.focus(), 80);
+          return;
+        }
       }
       clearVerifier();
+      setConfirmationResult(null);
       setStep('phone');
       setOtpDigits('');
+      setDisplayName('');
       onClose();
     } catch (err) {
       setErrorMsg(mapFirebaseAuthError(err, language, domainStatus.authorized));
     } finally {
+      onPhoneAuthModeEnd?.();
       setVerifyingOtp(false);
     }
   };
@@ -569,9 +619,83 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
+          {/* Phone Mode Switcher: Log In (Returning) vs Sign Up (First-Time) */}
+          {step === 'phone' && (
+            <div
+              role="tablist"
+              aria-label={language === 'hi' ? 'लॉगिन या साइन अप चुनें' : 'Choose Log In or Sign Up'}
+              className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authMode === 'login'}
+                onClick={() => {
+                  setAuthMode('login');
+                  setErrorMsg(null);
+                  setInfoMsg(null);
+                }}
+                className={`min-h-[42px] px-3 py-2 rounded-xl text-xs sm:text-sm font-display font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  authMode === 'login'
+                    ? 'bg-[#0A1633] dark:bg-[#1D4ED8] text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-800/70'
+                }`}
+              >
+                <LogIn className="w-3.5 h-3.5 shrink-0" />
+                <span>{language === 'hi' ? 'लॉगिन (Log In)' : 'Log In'}</span>
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authMode === 'signup'}
+                onClick={() => {
+                  setAuthMode('signup');
+                  setErrorMsg(null);
+                  setInfoMsg(null);
+                }}
+                className={`min-h-[42px] px-3 py-2 rounded-xl text-xs sm:text-sm font-display font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  authMode === 'signup'
+                    ? 'bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-amber-500 text-slate-950 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-800/70'
+                }`}
+              >
+                <UserPlus className="w-3.5 h-3.5 shrink-0" />
+                <span>{language === 'hi' ? 'नया साइन अप (Sign Up)' : 'Sign Up'}</span>
+              </button>
+            </div>
+          )}
+
           {/* Phone + OTP Section */}
           {step === 'phone' ? (
             <form onSubmit={(e) => void handleSendOtp(e)} className="space-y-3.5">
+              {/* Name field ONLY asked on first-time Sign Up, never on returning Log In */}
+              {authMode === 'signup' && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
+                    {language === 'hi' ? 'आपका पूरा नाम *' : 'Your Full Name *'}
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      ref={nameInputRef}
+                      type="text"
+                      required
+                      maxLength={40}
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder={t.nameOptionalPlaceholder}
+                      className="w-full min-h-[44px] pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    />
+                  </div>
+                  <p className="mt-1 text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
+                    {language === 'hi'
+                      ? 'निजी — केवल पहली बार साइन अप के समय आवश्यक। लीडरबोर्ड पर केवल आपकी यूनिक ID (UPM-XXXXXXXX) दिखाई देती है।'
+                      : 'Private — asked only once on first Sign Up. Only your Unique ID (UPM-XXXXXXXX) appears on the Leaderboard.'}
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
                   {t.mobileLabel}
@@ -609,6 +733,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     />
                   </div>
                 </div>
+                {authMode === 'login' && (
+                  <p className="mt-1 text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
+                    {language === 'hi'
+                      ? 'पहले से पंजीकृत यूज़र केवल अपना मोबाइल नंबर दर्ज करके लॉगिन कर सकते हैं।'
+                      : 'Already signed up? Just enter your registered mobile number — no name needed.'}
+                  </p>
+                )}
                 {(() => {
                   const previewDigits = normalizePhoneDigits(phoneDigits, countryCode);
                   if (previewDigits.length < 7) return null;
@@ -624,28 +755,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 })()}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
-                  {t.nameOptionalLabel}
-                </label>
-                <div className="relative">
-                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
-                    maxLength={40}
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder={t.nameOptionalPlaceholder}
-                    className="w-full min-h-[44px] pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                  />
-                </div>
-                <p className="mt-1 text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
-                  {language === 'hi'
-                    ? 'निजी — लीडरबोर्ड पर केवल आपकी यूनिक ID (UPM-XXXXXXXX) दिखाई देती है।'
-                    : 'Private — only your Unique ID (UPM-XXXXXXXX) is shown on the Leaderboard.'}
-                </p>
-              </div>
-
               {errorMsg && (
                 <div className="rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-3 text-xs font-semibold text-rose-700 dark:text-rose-300 leading-relaxed break-words">
                   {errorMsg}
@@ -658,10 +767,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 className="w-full min-h-[46px] py-3 rounded-xl bg-gradient-to-r from-[#FF9933] via-[#F59E0B] to-amber-500 hover:from-amber-400 hover:to-amber-500 disabled:opacity-60 text-slate-950 font-display font-extrabold text-sm flex items-center justify-center gap-2 up-gold-rim up-md3-ripple cursor-pointer"
               >
                 <Smartphone className="w-4 h-4" />
-                <span>{sendingOtp ? t.sendingOtp : t.sendOtp}</span>
+                <span>
+                  {sendingOtp
+                    ? t.sendingOtp
+                    : authMode === 'signup'
+                    ? language === 'hi'
+                      ? 'साइन अप OTP भेजें'
+                      : 'Send Sign Up OTP'
+                    : language === 'hi'
+                    ? 'लॉगिन OTP भेजें'
+                    : 'Send Login OTP'}
+                </span>
               </button>
 
-              <div className="flex justify-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg(null);
+                    setInfoMsg(null);
+                    setAuthMode((m) => (m === 'login' ? 'signup' : 'login'));
+                  }}
+                  className="text-xs font-bold text-slate-700 dark:text-amber-300 hover:underline cursor-pointer"
+                >
+                  {authMode === 'login'
+                    ? language === 'hi'
+                      ? 'नए यूज़र हैं? पहले साइन अप करें →'
+                      : 'New user? Sign up first with your name →'
+                    : language === 'hi'
+                    ? 'पहले से साइन अप कर चुके हैं? सीधे लॉगिन करें →'
+                    : 'Already signed up? Log in with mobile number →'}
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -721,7 +858,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 className="w-full min-h-[46px] py-3 rounded-xl bg-gradient-to-r from-[#1D4ED8] to-[#0891B2] hover:opacity-95 disabled:opacity-60 text-white font-display font-bold text-sm flex items-center justify-center gap-2 up-neon-cyan up-md3-ripple cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>{verifyingOtp ? t.verifyingOtp : t.verifyOtp}</span>
+                <span>
+                  {verifyingOtp
+                    ? t.verifyingOtp
+                    : authMode === 'signup'
+                    ? language === 'hi'
+                      ? 'OTP सत्यापित करें व साइन अप करें'
+                      : 'Verify OTP & Complete Sign Up'
+                    : language === 'hi'
+                    ? 'OTP सत्यापित करें व लॉगिन करें'
+                    : 'Verify OTP & Log In'}
+                </span>
               </button>
 
               <div className="flex items-center justify-between gap-2 text-xs pt-0.5">
